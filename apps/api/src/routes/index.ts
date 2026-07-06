@@ -4,6 +4,8 @@ import { authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../env';
 import { accountsRoute } from './accounts';
 import { eventsRoute } from './events';
+import { insightsRoute } from './insights';
+import { ipsRoute } from './ips';
 import { networthRoute } from './networth';
 
 /**
@@ -14,16 +16,19 @@ export const protectedRoutes = new Hono<AppEnv>();
 
 protectedRoutes.use('*', authMiddleware);
 
-// Phase 1 — the spine (implemented)
+// Phase 1 — the spine
 protectedRoutes.route('/accounts', accountsRoute);
 protectedRoutes.route('/events', eventsRoute);
 protectedRoutes.route('/networth', networthRoute);
+
+// Phase 2 — the conscience
+protectedRoutes.route('/ips', ipsRoute);
+protectedRoutes.route('/insights', insightsRoute);
 
 // Later phases (contract only, for now)
 const pending = (phase: string) => (c: Context<AppEnv>) =>
   c.json({ error: 'Not implemented yet', comingIn: phase }, 501);
 
 protectedRoutes.get('/goals', pending('Phase 2'));
-protectedRoutes.get('/ips', pending('Phase 2'));
 protectedRoutes.post('/ai/recommend', pending('Phase 3'));
 protectedRoutes.post('/ai/simulate', pending('Phase 4'));

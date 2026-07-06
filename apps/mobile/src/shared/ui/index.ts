@@ -9,3 +9,4 @@ export { SectionTitle } from './section-title';
 export { Field } from './field';
 export { Segmented } from './segmented';
 export { SelectPills } from './select-pills';
+export { InsightCard } from './insight-card';

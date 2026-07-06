@@ -49,6 +49,19 @@ export default function RootLayout() {
           name="account/new"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
+        <Stack.Screen
+          name="ips"
+          options={{
+            headerShown: true,
+            title: 'Reguli IPS',
+            headerStyle: { backgroundColor: colors.bg.base },
+            headerTintColor: colors.accent.default,
+            headerTitleStyle: {
+              fontFamily: 'Inter_600SemiBold',
+              color: colors.content.primary,
+            },
+          }}
+        />
       </Stack>
     </Providers>
   );

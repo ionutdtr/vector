@@ -73,6 +73,23 @@ export default function SettingsScreen() {
           onPress={() => router.push('/account/new')}
         />
       </View>
+
+      <View className="gap-3">
+        <SectionTitle>Conștiință</SectionTitle>
+        <Card onPress={() => router.push('/ips')}>
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text variant="body">Reguli IPS</Text>
+              <Text variant="small" tone="muted">
+                Cele 11 principii care te protejează de tine
+              </Text>
+            </View>
+            <Text variant="title" tone="muted">
+              ›
+            </Text>
+          </View>
+        </Card>
+      </View>
     </Screen>
   );
 }

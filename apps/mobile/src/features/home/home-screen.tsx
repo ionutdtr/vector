@@ -1,7 +1,16 @@
 import { View } from 'react-native';
+import { useInsights } from '@shared/api/insights';
 import { useNetWorth } from '@shared/api/networth';
 import { formatAmount } from '@shared/lib/format';
-import { Button, Card, Money, Screen, SectionTitle, Text } from '@shared/ui';
+import {
+  Button,
+  Card,
+  InsightCard,
+  Money,
+  Screen,
+  SectionTitle,
+  Text,
+} from '@shared/ui';
 
 /**
  * The Daily Briefing. The net-worth hero is LIVE (from /networth on Neon).
@@ -9,6 +18,8 @@ import { Button, Card, Money, Screen, SectionTitle, Text } from '@shared/ui';
  */
 export function HomeScreen() {
   const { data: nw, isLoading, isError } = useNetWorth();
+  const { data: insights } = useInsights();
+  const warning = (insights ?? []).find((i) => i.kind === 'warning');
 
   return (
     <Screen>
@@ -55,6 +66,9 @@ export function HomeScreen() {
           </View>
         </View>
       </Card>
+
+      {/* Risk alert — live from the rules engine */}
+      {warning ? <InsightCard insight={warning} /> : null}
 
       {/* Today's one recommendation (static until Phase 3) */}
       <Card tone="accent" shadow={false}>

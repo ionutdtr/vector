@@ -3,6 +3,7 @@ import { EVENT_SIGN, eventInputSchema } from '@vector/shared';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
+import { evaluateEventRules } from '../services/rules-engine';
 
 export const eventsRoute = new Hono<AppEnv>();
 
@@ -86,5 +87,13 @@ eventsRoute.post('/', async (c) => {
     }
   }
 
-  return c.json({ event: row }, 201);
+  // Deterministic IPS checks — attach any warnings immediately (no LLM).
+  const triggered = await evaluateEventRules(userId, {
+    id: row!.id,
+    type: row!.type,
+    baseAmount: row!.baseAmount,
+    title: row!.title,
+  });
+
+  return c.json({ event: row, insights: triggered }, 201);
 });
