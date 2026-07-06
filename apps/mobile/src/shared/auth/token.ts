@@ -10,7 +10,12 @@ export function getToken(): string | null {
 }
 
 export async function loadToken(): Promise<string | null> {
-  current = await SecureStore.getItemAsync(KEY);
+  // Never let a storage failure (e.g. native module not linked) crash startup.
+  try {
+    current = await SecureStore.getItemAsync(KEY);
+  } catch {
+    current = null;
+  }
   return current;
 }
 
@@ -21,5 +26,9 @@ export async function saveToken(token: string): Promise<void> {
 
 export async function clearToken(): Promise<void> {
   current = null;
-  await SecureStore.deleteItemAsync(KEY);
+  try {
+    await SecureStore.deleteItemAsync(KEY);
+  } catch {
+    // ignore — in-memory mirror is already cleared
+  }
 }
