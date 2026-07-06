@@ -1,3 +1,4 @@
+import * as LocalAuthentication from 'expo-local-authentication';
 import { create } from 'zustand';
 import { clearToken, loadToken, saveToken } from './token';
 
@@ -7,7 +8,7 @@ export interface AuthUser {
   firstName: string;
 }
 
-type Status = 'loading' | 'authed' | 'guest';
+type Status = 'loading' | 'authed' | 'guest' | 'locked';
 
 interface AuthState {
   status: Status;
@@ -15,6 +16,17 @@ interface AuthState {
   hydrate: () => Promise<void>;
   signIn: (token: string, user: AuthUser) => Promise<void>;
   signOut: () => Promise<void>;
+  unlock: () => Promise<void>;
+}
+
+async function biometricAvailable(): Promise<boolean> {
+  try {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = await LocalAuthentication.isEnrolledAsync();
+    return hasHardware && enrolled;
+  } catch {
+    return false;
+  }
 }
 
 export const useAuth = create<AuthState>((set) => ({
@@ -22,7 +34,13 @@ export const useAuth = create<AuthState>((set) => ({
   user: null,
   hydrate: async () => {
     const token = await loadToken();
-    set({ status: token ? 'authed' : 'guest' });
+    if (!token) {
+      set({ status: 'guest' });
+      return;
+    }
+    // A stored session: require biometric unlock if the device supports it.
+    const bio = await biometricAvailable();
+    set({ status: bio ? 'locked' : 'authed' });
   },
   signIn: async (token, user) => {
     await saveToken(token);
@@ -31,5 +49,12 @@ export const useAuth = create<AuthState>((set) => ({
   signOut: async () => {
     await clearToken();
     set({ status: 'guest', user: null });
+  },
+  unlock: async () => {
+    const res = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Deblochează Vector',
+      fallbackLabel: 'Folosește codul',
+    });
+    if (res.success) set({ status: 'authed' });
   },
 }));

@@ -1,4 +1,6 @@
+import { useRouter } from 'expo-router';
 import { View } from 'react-native';
+import { useRecommendation } from '@shared/api/ai';
 import { useGoals } from '@shared/api/goals';
 import { useInsights } from '@shared/api/insights';
 import { useNetWorth } from '@shared/api/networth';
@@ -25,6 +27,8 @@ export function HomeScreen() {
   const { data: goals } = useGoals();
   const mainGoal =
     (goals ?? []).find((g) => g.kind === 'apartment') ?? (goals ?? [])[0];
+  const rec = useRecommendation();
+  const router = useRouter();
 
   return (
     <Screen>
@@ -75,20 +79,34 @@ export function HomeScreen() {
       {/* Risk alert — live from the rules engine */}
       {warning ? <InsightCard insight={warning} /> : null}
 
-      {/* Today's one recommendation (static until Phase 3) */}
+      {/* Today's one recommendation — live from the CFO */}
       <Card tone="accent" shadow={false}>
         <Text variant="small" tone="accent">
           RECOMANDAREA ZILEI
         </Text>
-        <Text variant="title" style={{ marginTop: 8 }}>
-          Contul firmei ține cash idle peste runway.
-        </Text>
-        <Text variant="body" tone="secondary" style={{ marginTop: 8 }}>
-          Muți 15.000 RON în poziția de index — lichiditatea rămâne peste podea și
-          capitalul primește o treabă. Conform IPS: „capital should always have a
-          job”.
-        </Text>
-        <Button label="Simulează" className="mt-5" onPress={() => {}} />
+        {rec.isLoading ? (
+          <Text variant="body" tone="secondary" style={{ marginTop: 8 }}>
+            CFO-ul analizează situația ta…
+          </Text>
+        ) : rec.isError ? (
+          <Text variant="body" tone="secondary" style={{ marginTop: 8 }}>
+            Adaugă `ANTHROPIC_API_KEY` în backend ca să pornești CFO-ul.
+          </Text>
+        ) : rec.data ? (
+          <>
+            <Text variant="title" style={{ marginTop: 8 }}>
+              {rec.data.title}
+            </Text>
+            <Text variant="body" tone="secondary" style={{ marginTop: 8 }}>
+              {rec.data.body}
+            </Text>
+          </>
+        ) : null}
+        <Button
+          label="Întreabă advisor-ul"
+          className="mt-5"
+          onPress={() => router.push('/advisor')}
+        />
       </Card>
 
       {/* Main goal — live */}

@@ -39,8 +39,11 @@ export default function RootLayout() {
     if (!loaded || status === 'loading') return;
     SplashScreen.hideAsync();
     const inAuthGroup = segments[0] === '(auth)';
+    const onLock = segments[1] === 'lock';
     if (status === 'guest' && !inAuthGroup) {
       router.replace('/(auth)/sign-in');
+    } else if (status === 'locked' && !onLock) {
+      router.replace('/(auth)/lock');
     } else if (status === 'authed' && inAuthGroup) {
       router.replace('/(tabs)');
     }
