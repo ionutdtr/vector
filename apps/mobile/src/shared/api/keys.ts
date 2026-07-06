@@ -6,4 +6,5 @@ export const queryKeys = {
   ips: ['ips'] as const,
   goals: ['goals'] as const,
   discipline: ['discipline'] as const,
+  briefing: ['briefing'] as const,
 };

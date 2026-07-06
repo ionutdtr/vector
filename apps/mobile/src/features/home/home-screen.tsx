@@ -1,10 +1,16 @@
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { useRecommendation } from '@shared/api/ai';
+import { useBriefing } from '@shared/api/briefing';
 import { useGoals } from '@shared/api/goals';
 import { useInsights } from '@shared/api/insights';
 import { useNetWorth } from '@shared/api/networth';
-import { formatAmount } from '@shared/lib/format';
+import {
+  formatAmount,
+  greetingDate,
+  greetingHello,
+  inDaysLabel,
+} from '@shared/lib/format';
 import {
   Button,
   Card,
@@ -17,12 +23,10 @@ import {
 import { DisciplineCard } from '@features/discipline/discipline-card';
 import { GoalCard } from '@features/goals/goal-card';
 
-/**
- * The Daily Briefing. The net-worth hero is LIVE (from /networth on Neon).
- * Recommendation / goal / upcoming remain static until Phases 2–3 wire them.
- */
+/** The Daily Briefing — net worth, discipline, one recommendation, goal, what's next. */
 export function HomeScreen() {
   const { data: nw, isLoading, isError } = useNetWorth();
+  const { data: briefing } = useBriefing();
   const { data: insights } = useInsights();
   const warning = (insights ?? []).find((i) => i.kind === 'warning');
   const { data: goals } = useGoals();
@@ -30,15 +34,20 @@ export function HomeScreen() {
     (goals ?? []).find((g) => g.kind === 'apartment') ?? (goals ?? [])[0];
   const rec = useRecommendation();
   const router = useRouter();
+  const firstName = briefing?.firstName ?? '';
+  const upcoming = briefing?.upcoming ?? [];
 
   return (
     <Screen>
-      {/* Greeting */}
+      {/* Greeting — live date + name */}
       <View className="mt-2 gap-1">
         <Text variant="caption" tone="muted">
-          Duminică, 6 iulie
+          {greetingDate()}
         </Text>
-        <Text variant="h1">Bună dimineața, Ionut</Text>
+        <Text variant="h1">
+          {greetingHello()}
+          {firstName ? `, ${firstName}` : ''}
+        </Text>
       </View>
 
       {/* Net worth hero — live */}
@@ -142,21 +151,65 @@ export function HomeScreen() {
         </View>
       </Card>
 
-      {/* Upcoming (static until Phase 2) */}
+      {/* Upcoming payments — live from recurring (next 14 days) */}
       <View className="gap-3">
         <SectionTitle>Urmează</SectionTitle>
         <Card>
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text variant="body">Rată leasing</Text>
-              <Text variant="caption" tone="muted">
-                în 4 zile
-              </Text>
-            </View>
-            <Money value={-2100} variant="title" colorBySign />
-          </View>
+          {upcoming.length === 0 ? (
+            <Text variant="body" tone="muted">
+              Nimic programat în 14 zile.
+            </Text>
+          ) : (
+            upcoming.map((u, idx) => (
+              <View key={`${u.title}-${idx}`}>
+                {idx > 0 ? <View className="my-1 h-px bg-hairline" /> : null}
+                <View className="flex-row items-center justify-between py-1">
+                  <View className="flex-1 pr-3">
+                    <Text variant="body">{u.title}</Text>
+                    <Text variant="caption" tone="muted">
+                      {inDaysLabel(u.in_days)}
+                    </Text>
+                  </View>
+                  <Money
+                    value={-Math.abs(u.amount)}
+                    currency={briefing?.baseCurrency ?? 'RON'}
+                    variant="title"
+                    colorBySign
+                  />
+                </View>
+              </View>
+            ))
+          )}
         </Card>
       </View>
+
+      {/* Smoking — the IPS calls it a financial leak */}
+      {briefing ? (
+        <Card>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 pr-3">
+              <Text variant="body">Fumat · luna aceasta</Text>
+              <Text variant="caption" tone="muted">
+                {briefing.smokingMonth > 0
+                  ? 'O scurgere financiară, conform IPS'
+                  : 'Fără scurgeri — ține-o așa'}
+              </Text>
+            </View>
+            {briefing.smokingMonth > 0 ? (
+              <Money
+                value={briefing.smokingMonth}
+                currency={briefing.baseCurrency}
+                variant="title"
+                tone="warning"
+              />
+            ) : (
+              <Text variant="title" tone="success">
+                0
+              </Text>
+            )}
+          </View>
+        </Card>
+      ) : null}
     </Screen>
   );
 }

@@ -5,6 +5,7 @@ import { authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../env';
 import { accountsRoute } from './accounts';
 import { aiRoute } from './ai';
+import { briefingRoute } from './briefing';
 import { disciplineRoute } from './discipline';
 import { eventsRoute } from './events';
 import { goalsRoute } from './goals';
@@ -41,6 +42,7 @@ protectedRoutes.get('/me', async (c) => {
 });
 
 // Phase 1 — the spine
+protectedRoutes.route('/briefing', briefingRoute);
 protectedRoutes.route('/accounts', accountsRoute);
 protectedRoutes.route('/events', eventsRoute);
 protectedRoutes.route('/networth', networthRoute);
