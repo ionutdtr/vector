@@ -58,6 +58,20 @@ export function insightPrompt(
   )}\n\nIn one or two sentences, say what this means for the user in context. Only surface a warning if it genuinely trips an IPS rule or risks liquidity.`;
 }
 
+/**
+ * Reading a receipt photo. One expense per receipt (the grand total) — VECTOR is
+ * aggregates-first, so no line-per-product. The persona prefix still applies;
+ * this only frames the extraction.
+ */
+export const RECEIPT_SCAN_PROMPT = `The image is meant to be a purchase receipt (bon fiscal). Extract, for the user to confirm:
+- merchant: the store / merchant name as printed (short).
+- total: the GRAND TOTAL actually paid — the final total line, never a subtotal and never a single product's price.
+- currency: RON, EUR, or USD (Romanian receipts are in lei / RON).
+- date: the purchase date as YYYY-MM-DD if it is printed; omit it otherwise.
+- type: "smoking" if this is a purchase of cigarettes / tobacco, otherwise "expense".
+- confidence: how sure you are of the total and merchant.
+Never invent numbers. If the total is not clearly legible, keep confidence low. If the image is not a legible receipt at all, set is_receipt to false.`;
+
 export function reviewPrompt(
   state: FinancialState,
   period: 'weekly' | 'monthly' | 'quarterly',

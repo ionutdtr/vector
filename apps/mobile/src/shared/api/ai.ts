@@ -96,3 +96,23 @@ export function useSimulate() {
         .then((r) => r.simulation),
   });
 }
+
+export interface ReceiptScan {
+  is_receipt: boolean;
+  merchant: string;
+  total: number;
+  currency: string;
+  date?: string;
+  type: 'expense' | 'smoking';
+  confidence: 'low' | 'medium' | 'high';
+}
+
+/** Send a receipt photo (base64) to the backend for a vision extraction. */
+export function useScanReceipt() {
+  return useMutation({
+    mutationFn: (vars: { image: string; mediaType: string }) =>
+      api
+        .post<{ scan: ReceiptScan }>('/ai/scan-receipt', vars)
+        .then((r) => r.scan),
+  });
+}

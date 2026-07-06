@@ -9,6 +9,9 @@ export const MODELS = {
   review: 'claude-sonnet-5',
   strategy: 'claude-opus-4-8',
   chat: 'claude-sonnet-5',
+  // Vision. Receipts can be blurry / creased and a misread total is a wrong
+  // ledger, so accuracy > speed here — sonnet, not haiku.
+  scan: 'claude-sonnet-5',
 } as const;
 
 export type AiSurface = keyof typeof MODELS;

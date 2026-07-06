@@ -51,6 +51,17 @@ export default function NewEventModal() {
         </Text>
       </View>
 
+      <Button
+        label="Scanează bon"
+        variant="secondary"
+        onPress={() => router.push('/event/scan')}
+      />
+      <View className="-mt-2 items-center">
+        <Text variant="caption" tone="muted">
+          sau adaugă manual
+        </Text>
+      </View>
+
       <View className="gap-3">
         <Text variant="caption" tone="secondary">
           Tip

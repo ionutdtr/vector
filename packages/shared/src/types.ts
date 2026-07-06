@@ -92,3 +92,18 @@ export interface AiReview {
   worsened: string[];
   actions: string[];
 }
+
+/**
+ * A receipt read by vision → one expense, pending the user's confirmation.
+ * Aggregates-first: a receipt is a single expense (the grand total), never a
+ * line per product. `smoking` when it's a tobacco purchase (feeds that goal).
+ */
+export interface AiReceiptScan {
+  is_receipt: boolean;
+  merchant: string;
+  total: number;
+  currency: string;
+  date?: string; // YYYY-MM-DD if legibly printed
+  type: 'expense' | 'smoking';
+  confidence: 'low' | 'medium' | 'high';
+}

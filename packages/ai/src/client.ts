@@ -55,6 +55,39 @@ export async function generateStructured(args: {
   return toolUse.input;
 }
 
+/**
+ * Structured JSON via forced tool use, from rich user content (text + images).
+ * Same contract as `generateStructured` but the user turn carries content blocks
+ * — used for vision (e.g. reading a receipt photo).
+ */
+export async function generateStructuredContent(args: {
+  model: string;
+  system: string;
+  content: Array<Record<string, unknown>>;
+  toolName: string;
+  toolDescription: string;
+  inputSchema: Record<string, unknown>;
+  maxTokens?: number;
+}): Promise<unknown> {
+  const data = await callAnthropic({
+    model: args.model,
+    max_tokens: args.maxTokens ?? 2048,
+    system: [{ type: 'text', text: args.system, cache_control: { type: 'ephemeral' } }],
+    messages: [{ role: 'user', content: args.content }],
+    tools: [
+      {
+        name: args.toolName,
+        description: args.toolDescription,
+        input_schema: args.inputSchema,
+      },
+    ],
+    tool_choice: { type: 'tool', name: args.toolName },
+  });
+  const toolUse = (data.content ?? []).find((b) => b.type === 'tool_use');
+  if (!toolUse) throw new Error('No tool_use block in Anthropic response');
+  return toolUse.input;
+}
+
 /** Tool-enabled turn: the model decides to reply in text OR call a tool. */
 export async function generateWithTools(args: {
   model: string;

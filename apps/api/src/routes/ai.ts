@@ -4,6 +4,7 @@ import {
   generateRecommendation,
   generateSimulation,
   hasAiKey,
+  scanReceipt,
 } from '@vector/ai';
 import { aiMessages, aiThreads, db, insights } from '@vector/db';
 import { type EventInput, simulateInputSchema } from '@vector/shared';
@@ -171,4 +172,43 @@ aiRoute.post('/simulate', async (c) => {
   });
 
   return c.json({ simulation });
+});
+
+const SCAN_MEDIA_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
+// ~5 MB decoded is Anthropic's per-image ceiling; base64 is ~4/3 of that.
+const MAX_IMAGE_B64 = 7_000_000;
+
+/**
+ * Scan a receipt photo → one structured expense for the user to confirm.
+ * Stateless: it reads the image and returns the extraction; the confirmed event
+ * is created via the normal /events path, so nothing is logged without review.
+ */
+aiRoute.post('/scan-receipt', async (c) => {
+  if (!hasAiKey()) return c.json(AI_UNAVAILABLE, 503);
+
+  const body = (await c.req.json().catch(() => ({}))) as {
+    image?: string;
+    mediaType?: string;
+  };
+  const image = body.image?.trim();
+  const mediaType = body.mediaType ?? 'image/jpeg';
+  if (!image) return c.json({ error: 'image required' }, 400);
+  if (!SCAN_MEDIA_TYPES.has(mediaType)) {
+    return c.json({ error: 'unsupported media type' }, 400);
+  }
+  if (image.length > MAX_IMAGE_B64) {
+    return c.json({ error: 'image too large' }, 413);
+  }
+
+  try {
+    const scan = await scanReceipt({ data: image, mediaType });
+    return c.json({ scan });
+  } catch {
+    return c.json({ error: 'scan failed' }, 502);
+  }
 });

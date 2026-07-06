@@ -30,6 +30,13 @@
         {
           "faceIDPermission": "Deblochează Vector cu Face ID."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Vector accesează pozele pentru a scana bonuri.",
+          "cameraPermission": "Vector folosește camera pentru a fotografia și scana bonuri."
+        }
       ]
     ],
     "experiments": {

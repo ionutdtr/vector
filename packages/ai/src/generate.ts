@@ -1,21 +1,29 @@
 import type {
   AiInsight,
+  AiReceiptScan,
   AiRecommendation,
   AiReview,
   AiSimulation,
   FinancialState,
 } from '@vector/shared';
-import { generateStructured, generateText, generateWithTools } from './client';
+import {
+  generateStructured,
+  generateStructuredContent,
+  generateText,
+  generateWithTools,
+} from './client';
 import { MODELS } from './models';
 import {
   CFO_SYSTEM_PROMPT,
   insightPrompt,
   recommendPrompt,
+  RECEIPT_SCAN_PROMPT,
   reviewPrompt,
   simulatePrompt,
 } from './prompts';
 import {
   aiInsightSchema,
+  aiReceiptScanSchema,
   aiRecommendationSchema,
   aiReviewSchema,
   aiSimulationSchema,
@@ -281,6 +289,79 @@ export async function generateInsight(
     maxTokens: 512,
   });
   return aiInsightSchema.parse(raw);
+}
+
+const RECEIPT_TOOL_SCHEMA = {
+  type: 'object',
+  properties: {
+    is_receipt: {
+      type: 'boolean',
+      description:
+        'True only if the image is actually a purchase receipt / bon fiscal. False for anything else (a random photo, a screenshot, an illegible blur).',
+    },
+    merchant: {
+      type: 'string',
+      description: 'The merchant / store name as printed. Short. "" if not legible.',
+    },
+    total: {
+      type: 'number',
+      description:
+        'The grand total actually paid, positive. The TOTAL line — never a subtotal, never a single item. 0 if not legible.',
+    },
+    currency: {
+      type: 'string',
+      enum: ['RON', 'EUR', 'USD'],
+      description: 'Currency of the total. Default RON (Romanian receipts show lei / RON).',
+    },
+    date: {
+      type: 'string',
+      description: 'Purchase date as YYYY-MM-DD if printed. Omit if not legible.',
+    },
+    type: {
+      type: 'string',
+      enum: ['expense', 'smoking'],
+      description: 'smoking for a cigarette / tobacco purchase, otherwise expense.',
+    },
+    confidence: {
+      type: 'string',
+      enum: ['low', 'medium', 'high'],
+      description: 'Confidence in the extracted total and merchant.',
+    },
+  },
+  required: ['is_receipt', 'merchant', 'total', 'currency', 'type', 'confidence'],
+} as const;
+
+/**
+ * Read a receipt photo → one structured expense (the grand total), pending the
+ * user's confirmation. Deliberately does NOT itemize — VECTOR is aggregates-first,
+ * so a receipt is one expense, not a line per product. Detects a tobacco purchase
+ * as `smoking` so it feeds the quit-smoking goal and the discipline score.
+ */
+export async function scanReceipt(image: {
+  data: string;
+  mediaType: string;
+}): Promise<AiReceiptScan> {
+  const raw = await generateStructuredContent({
+    model: MODELS.scan,
+    system: CFO_SYSTEM_PROMPT,
+    content: [
+      {
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: image.mediaType,
+          data: image.data,
+        },
+      },
+      { type: 'text', text: RECEIPT_SCAN_PROMPT },
+    ],
+    toolName: 'record_receipt',
+    toolDescription:
+      'Return the single grand total and merchant read from this receipt, for the user to confirm.',
+    inputSchema: RECEIPT_TOOL_SCHEMA as unknown as Record<string, unknown>,
+    maxTokens: 512,
+  });
+  return aiReceiptScanSchema.parse(raw);
 }
 
 const LOG_EVENT_TOOL = {
