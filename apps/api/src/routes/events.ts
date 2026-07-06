@@ -1,11 +1,28 @@
-import { accounts, db, events, fxRates, profiles } from '@vector/db';
+import { buildFinancialState, generateInsight, hasAiKey } from '@vector/ai';
+import { accounts, db, events, fxRates, insights, profiles } from '@vector/db';
 import { EVENT_SIGN, eventInputSchema } from '@vector/shared';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
-import { evaluateEventRules } from '../services/rules-engine';
+import { type CreatedInsight, evaluateEventRules } from '../services/rules-engine';
 
 export const eventsRoute = new Hono<AppEnv>();
+
+/**
+ * Whether an event is worth an AI interpretation. Keeps the timeline meaningful
+ * (and the log fast) — no model call for a 5 RON coffee.
+ */
+const AI_INSIGHT_TYPES = new Set([
+  'income',
+  'investment',
+  'dividend',
+  'smoking',
+  'goal_contribution',
+]);
+function worthAnInsight(type: string, baseAmount: number): boolean {
+  if (AI_INSIGHT_TYPES.has(type)) return true;
+  return type === 'expense' && baseAmount >= 1000;
+}
 
 eventsRoute.get('/', async (c) => {
   const userId = c.get('userId');
@@ -95,5 +112,45 @@ eventsRoute.post('/', async (c) => {
     title: row!.title,
   });
 
-  return c.json({ event: row, insights: triggered }, 201);
+  // Best-effort AI interpretation for significant events. Never blocks the log:
+  // the event + deterministic insights have already committed.
+  const aiInsights: CreatedInsight[] = [];
+  if (hasAiKey() && worthAnInsight(row!.type, Number(row!.baseAmount))) {
+    try {
+      const state = await buildFinancialState(db, userId);
+      const ai = await generateInsight(state, {
+        type: row!.type,
+        title: row!.title,
+        amount: Number(row!.baseAmount),
+        domain: row!.domain,
+      });
+      const [ins] = await db
+        .insert(insights)
+        .values({
+          userId,
+          kind: ai.kind,
+          title: ai.title,
+          body: ai.body,
+          eventId: row!.id,
+          ruleCode: ai.rule_code ?? null,
+          severity: ai.severity,
+          source: 'ai',
+        })
+        .returning();
+      if (ins) {
+        aiInsights.push({
+          id: ins.id,
+          kind: ins.kind,
+          title: ins.title,
+          body: ins.body,
+          ruleCode: ins.ruleCode,
+          severity: ins.severity,
+        });
+      }
+    } catch {
+      // AI down / no key / mangled output — the log is unaffected.
+    }
+  }
+
+  return c.json({ event: row, insights: [...triggered, ...aiInsights] }, 201);
 });

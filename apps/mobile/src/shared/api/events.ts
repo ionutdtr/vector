@@ -47,6 +47,7 @@ export function useCreateEvent() {
       qc.invalidateQueries({ queryKey: queryKeys.networth });
       qc.invalidateQueries({ queryKey: queryKeys.accounts });
       qc.invalidateQueries({ queryKey: queryKeys.insights });
+      qc.invalidateQueries({ queryKey: queryKeys.discipline });
     },
   });
 }

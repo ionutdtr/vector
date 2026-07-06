@@ -1,4 +1,5 @@
 import type {
+  AiInsight,
   AiRecommendation,
   AiReview,
   AiSimulation,
@@ -8,11 +9,13 @@ import { generateStructured, generateText } from './client';
 import { MODELS } from './models';
 import {
   CFO_SYSTEM_PROMPT,
+  insightPrompt,
   recommendPrompt,
   reviewPrompt,
   simulatePrompt,
 } from './prompts';
 import {
+  aiInsightSchema,
   aiRecommendationSchema,
   aiReviewSchema,
   aiSimulationSchema,
@@ -236,6 +239,45 @@ export async function generateReview(
     }
   }
   throw lastErr;
+}
+
+const INSIGHT_TOOL_SCHEMA = {
+  type: 'object',
+  properties: {
+    kind: {
+      type: 'string',
+      enum: ['insight', 'warning', 'forecast', 'achievement'],
+    },
+    title: { type: 'string', description: 'One short line.' },
+    body: {
+      type: 'string',
+      description: 'One or two sentences, in context. Numbers first.',
+    },
+    rule_code: {
+      type: 'string',
+      description: 'IPS rule code if one is genuinely in play.',
+    },
+    severity: { type: 'string', enum: ['info', 'warn', 'critical'] },
+  },
+  required: ['kind', 'title', 'body', 'severity'],
+} as const;
+
+/** Interpret a just-logged event in context. Fast tier (haiku), best-effort. */
+export async function generateInsight(
+  state: FinancialState,
+  event: { type: string; title: string; amount: number; domain: string },
+): Promise<AiInsight> {
+  const raw = await generateStructured({
+    model: MODELS.insight,
+    system: CFO_SYSTEM_PROMPT,
+    userPrompt: insightPrompt(state, event),
+    toolName: 'provide_insight',
+    toolDescription:
+      'Interpret the event in context, in one or two sentences. Warn only if it genuinely trips a rule or risks liquidity.',
+    inputSchema: INSIGHT_TOOL_SCHEMA as unknown as Record<string, unknown>,
+    maxTokens: 512,
+  });
+  return aiInsightSchema.parse(raw);
 }
 
 /** Advisor chat reply. Persona is cached; state rides as a leading context turn. */
