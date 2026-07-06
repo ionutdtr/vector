@@ -1,0 +1,32 @@
+# deps
+node_modules/
+.pnp
+.pnp.js
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# builds
+dist/
+build/
+*.tsbuildinfo
+
+# expo / rn
+.expo/
+.expo-shared/
+apps/mobile/ios/
+apps/mobile/android/
+*.orig.*
+web-build/
+
+# vercel
+.vercel/
+
+# logs / os
+*.log
+npm-debug.log*
+.DS_Store
+coverage/
+.turbo/

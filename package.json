@@ -1,0 +1,22 @@
+{
+  "name": "vector",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Vector — the operating system of my financial life. A personal CFO.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "db:generate": "npm -w @vector/db run generate",
+    "db:migrate": "npm -w @vector/db run migrate",
+    "db:seed": "npm -w @vector/db run seed",
+    "db:studio": "npm -w @vector/db run studio",
+    "api:dev": "npm -w @vector/api run dev",
+    "mobile:start": "npm -w @vector/mobile run start",
+    "typecheck": "npm -ws --if-present run typecheck"
+  }
+}
