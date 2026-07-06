@@ -11,6 +11,7 @@ import { goalsRoute } from './goals';
 import { insightsRoute } from './insights';
 import { ipsRoute } from './ips';
 import { networthRoute } from './networth';
+import { reviewsRoute } from './reviews';
 
 /**
  * Authenticated routes. Implemented endpoints are mounted; the rest return 501
@@ -54,3 +55,6 @@ protectedRoutes.route('/ai', aiRoute);
 
 // Phase 5 — the discipline score
 protectedRoutes.route('/discipline', disciplineRoute);
+
+// Board Meeting — periodic AI reviews
+protectedRoutes.route('/reviews', reviewsRoute);

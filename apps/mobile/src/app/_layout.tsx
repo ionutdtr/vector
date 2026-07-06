@@ -104,6 +104,19 @@ export default function RootLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="board"
+          options={{
+            headerShown: true,
+            title: 'Board Meeting',
+            headerStyle: { backgroundColor: colors.bg.base },
+            headerTintColor: colors.accent.default,
+            headerTitleStyle: {
+              fontFamily: 'Inter_600SemiBold',
+              color: colors.content.primary,
+            },
+          }}
+        />
       </Stack>
     </Providers>
   );

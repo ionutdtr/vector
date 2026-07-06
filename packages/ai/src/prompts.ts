@@ -55,3 +55,23 @@ export function insightPrompt(
     2,
   )}\n\nIn one or two sentences, say what this means for the user in context. Only surface a warning if it genuinely trips an IPS rule or risks liquidity.`;
 }
+
+export function reviewPrompt(
+  state: FinancialState,
+  period: 'weekly' | 'monthly' | 'quarterly',
+  stats: unknown,
+): string {
+  const window =
+    period === 'weekly'
+      ? 'the last week'
+      : period === 'monthly'
+        ? 'the last month'
+        : 'the last quarter';
+  return `${stateBlock(
+    state,
+  )}\n\nPeriod under review: ${period} (${window}). Deterministic aggregates for the period (computed in code, trustworthy):\n${JSON.stringify(
+    stats,
+    null,
+    2,
+  )}\n\nRun a board meeting on this period. Be a demanding board — concrete, numeric, no platitudes, no motivational filler. Cite IPS rule codes where a rule is in play. If the data is thin, say so rather than inventing momentum. Produce:\n- headline: one line, the verdict on the period\n- narrative: 2–3 sentences, the board's read of what happened and why it matters\n- improved: what genuinely got better (numeric where possible)\n- worsened: what got worse or slipped\n- actions: what should change before the next meeting — specific and prioritized\n\nKeep the narrative to 2–3 sentences and each bullet to a single concise line (max ~20 words). Return improved/worsened/actions as JSON arrays of plain strings.`;
+}

@@ -1,12 +1,22 @@
 import type {
   AiRecommendation,
+  AiReview,
   AiSimulation,
   FinancialState,
 } from '@vector/shared';
 import { generateStructured, generateText } from './client';
 import { MODELS } from './models';
-import { CFO_SYSTEM_PROMPT, recommendPrompt, simulatePrompt } from './prompts';
-import { aiRecommendationSchema, aiSimulationSchema } from './schemas';
+import {
+  CFO_SYSTEM_PROMPT,
+  recommendPrompt,
+  reviewPrompt,
+  simulatePrompt,
+} from './prompts';
+import {
+  aiRecommendationSchema,
+  aiReviewSchema,
+  aiSimulationSchema,
+} from './schemas';
 
 const RECOMMENDATION_TOOL_SCHEMA = {
   type: 'object',
@@ -135,6 +145,97 @@ export async function generateSimulation(
     inputSchema: SIMULATION_TOOL_SCHEMA as unknown as Record<string, unknown>,
   });
   return aiSimulationSchema.parse(raw);
+}
+
+const REVIEW_TOOL_SCHEMA = {
+  type: 'object',
+  properties: {
+    headline: { type: 'string', description: 'One-line verdict on the period.' },
+    narrative: {
+      type: 'string',
+      description: "2–3 sentences, the board's read of the period.",
+    },
+    improved: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'What genuinely got better, numeric where possible.',
+    },
+    worsened: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'What got worse or slipped.',
+    },
+    actions: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'What should change before the next meeting, prioritized.',
+    },
+  },
+  required: ['headline', 'narrative', 'improved', 'worsened', 'actions'],
+} as const;
+
+/**
+ * Strip any tool-call / XML markup the model occasionally leaks into a string
+ * value (e.g. a stray `</narrative>` or `<parameter name="…">`). Defensive: the
+ * fields are meant to be plain text, so cut at the first such marker.
+ */
+function cleanText(s: string): string {
+  const markers = ['</', '<parameter', '<antml', '<function', '<invoke'];
+  let idx = -1;
+  for (const m of markers) {
+    const i = s.indexOf(m);
+    if (i >= 0 && (idx === -1 || i < idx)) idx = i;
+  }
+  return (idx >= 0 ? s.slice(0, idx) : s).trim();
+}
+
+/**
+ * A Board Meeting review of a period. Routed through the strategy tier (opus):
+ * this 3-array schema is where the lighter tiers get unreliable — they leak the
+ * tool-call XML and drop fields — and reviews are infrequent and high-value, so
+ * the reliability is worth it. Lenient parse + coercion + retry back it up.
+ */
+export async function generateReview(
+  state: FinancialState,
+  period: 'weekly' | 'monthly' | 'quarterly',
+  stats: unknown,
+): Promise<AiReview> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const raw = await generateStructured({
+        model: MODELS.strategy,
+        system: CFO_SYSTEM_PROMPT,
+        userPrompt: reviewPrompt(state, period, stats),
+        toolName: 'provide_review',
+        toolDescription:
+          'Return the structured board-meeting review. Each field is separate structured data — never embed XML tags, markup, or other field names inside a text value.',
+        inputSchema: REVIEW_TOOL_SCHEMA as unknown as Record<string, unknown>,
+        maxTokens: 3000,
+      });
+      const review = aiReviewSchema.parse(raw);
+      const narrative = cleanText(review.narrative ?? '');
+      const improved = review.improved.map(cleanText).filter(Boolean);
+      const worsened = review.worsened.map(cleanText).filter(Boolean);
+      const actions = review.actions.map(cleanText).filter(Boolean);
+
+      // A genuinely empty payload means the model mangled it — retry.
+      if (!narrative && !improved.length && !worsened.length && !actions.length) {
+        throw new Error('empty review payload');
+      }
+
+      return {
+        headline: cleanText(review.headline ?? '') || 'Review pe perioadă',
+        narrative,
+        improved,
+        worsened,
+        actions,
+      };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
 }
 
 /** Advisor chat reply. Persona is cached; state rides as a leading context turn. */

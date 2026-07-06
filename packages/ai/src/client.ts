@@ -36,7 +36,9 @@ export async function generateStructured(args: {
 }): Promise<unknown> {
   const data = await callAnthropic({
     model: args.model,
-    max_tokens: args.maxTokens ?? 1024,
+    // Structured outputs must never truncate mid-JSON — a cut tool input drops
+    // required fields and 500s the parse. Give them ample room.
+    max_tokens: args.maxTokens ?? 2048,
     system: [{ type: 'text', text: args.system, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: args.userPrompt }],
     tools: [

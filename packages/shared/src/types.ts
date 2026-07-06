@@ -83,3 +83,12 @@ export interface AiInsight {
   rule_code?: string;
   severity: 'info' | 'warn' | 'critical';
 }
+
+/** A Board Meeting review over a period. Synthesis + judgment → LLM-generated. */
+export interface AiReview {
+  headline: string;
+  narrative: string;
+  improved: string[];
+  worsened: string[];
+  actions: string[];
+}

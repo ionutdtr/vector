@@ -127,6 +127,21 @@ export function HomeScreen() {
         </View>
       ) : null}
 
+      {/* Board Meeting entry */}
+      <Card onPress={() => router.push('/board')}>
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1">
+            <Text variant="title">Board Meeting</Text>
+            <Text variant="caption" tone="muted">
+              Review săptămânal, lunar, trimestrial
+            </Text>
+          </View>
+          <Text variant="h3" tone="muted">
+            →
+          </Text>
+        </View>
+      </Card>
+
       {/* Upcoming (static until Phase 2) */}
       <View className="gap-3">
         <SectionTitle>Urmează</SectionTitle>
