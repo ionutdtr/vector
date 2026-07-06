@@ -4,4 +4,5 @@ export const queryKeys = {
   accounts: ['accounts'] as const,
   insights: ['insights'] as const,
   ips: ['ips'] as const,
+  goals: ['goals'] as const,
 };

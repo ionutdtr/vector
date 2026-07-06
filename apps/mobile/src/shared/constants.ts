@@ -24,3 +24,12 @@ export const DOMAIN_OPTIONS = [
   { key: 'personal', label: 'Personal' },
   { key: 'business', label: 'Firmă' },
 ] as const;
+
+export const GOAL_KIND_OPTIONS = [
+  { key: 'apartment', label: 'Apartament' },
+  { key: 'emergency_fund', label: 'Fond urgență' },
+  { key: 'investment', label: 'Investiții' },
+  { key: 'business_growth', label: 'Firmă' },
+  { key: 'quit_smoking', label: 'Fără fumat' },
+  { key: 'custom', label: 'Altul' },
+] as const;

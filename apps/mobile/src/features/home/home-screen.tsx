@@ -1,4 +1,5 @@
 import { View } from 'react-native';
+import { useGoals } from '@shared/api/goals';
 import { useInsights } from '@shared/api/insights';
 import { useNetWorth } from '@shared/api/networth';
 import { formatAmount } from '@shared/lib/format';
@@ -11,6 +12,7 @@ import {
   SectionTitle,
   Text,
 } from '@shared/ui';
+import { GoalCard } from '@features/goals/goal-card';
 
 /**
  * The Daily Briefing. The net-worth hero is LIVE (from /networth on Neon).
@@ -20,6 +22,9 @@ export function HomeScreen() {
   const { data: nw, isLoading, isError } = useNetWorth();
   const { data: insights } = useInsights();
   const warning = (insights ?? []).find((i) => i.kind === 'warning');
+  const { data: goals } = useGoals();
+  const mainGoal =
+    (goals ?? []).find((g) => g.kind === 'apartment') ?? (goals ?? [])[0];
 
   return (
     <Screen>
@@ -86,24 +91,13 @@ export function HomeScreen() {
         <Button label="Simulează" className="mt-5" onPress={() => {}} />
       </Card>
 
-      {/* Apartment goal (static until Phase 2) */}
-      <View className="gap-3">
-        <SectionTitle>Apartament 2028</SectionTitle>
-        <Card>
-          <View className="flex-row items-end justify-between">
-            <Money value={180000} variant="h3" />
-            <Text variant="caption" tone="muted">
-              din 500.000 RON
-            </Text>
-          </View>
-          <View className="mt-4 h-2 overflow-hidden rounded-pill bg-bg-surface2">
-            <View className="h-2 rounded-pill bg-accent" style={{ width: '36%' }} />
-          </View>
-          <Text variant="caption" tone="muted" style={{ marginTop: 10 }}>
-            La ritmul actual: iunie 2028 · 8.900 RON/lună necesar
-          </Text>
-        </Card>
-      </View>
+      {/* Main goal — live */}
+      {mainGoal ? (
+        <View className="gap-3">
+          <SectionTitle>Obiectiv principal</SectionTitle>
+          <GoalCard goal={mainGoal} />
+        </View>
+      ) : null}
 
       {/* Upcoming (static until Phase 2) */}
       <View className="gap-3">
