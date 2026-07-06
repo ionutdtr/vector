@@ -6,3 +6,6 @@ export { Money } from './money';
 export { Delta } from './delta';
 export { Fab } from './fab';
 export { SectionTitle } from './section-title';
+export { Field } from './field';
+export { Segmented } from './segmented';
+export { SelectPills } from './select-pills';

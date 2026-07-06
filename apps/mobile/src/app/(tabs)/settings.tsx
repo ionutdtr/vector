@@ -1,11 +1,78 @@
-import { ComingSoon } from '@features/coming-soon';
+import { useRouter } from 'expo-router';
+import { View } from 'react-native';
+import { useAccounts } from '@shared/api/accounts';
+import { Button, Card, Money, Screen, SectionTitle, Text } from '@shared/ui';
 
 export default function SettingsScreen() {
+  const router = useRouter();
+  const { data: accounts, isLoading, isError } = useAccounts();
+
   return (
-    <ComingSoon
-      title="Setări"
-      line="Conturi, regulile IPS, monedă de bază, profil, date. Locul unde reglezi conștiința aplicației."
-      phase="Se activează progresiv (conturi în Faza 1, IPS în Faza 2)."
-    />
+    <Screen>
+      <Text variant="h1">Setări</Text>
+
+      <View className="gap-3">
+        <SectionTitle
+          action={
+            <Text
+              variant="caption"
+              tone="accent"
+              onPress={() => router.push('/account/new')}
+            >
+              + Adaugă
+            </Text>
+          }
+        >
+          Conturi
+        </SectionTitle>
+
+        {isLoading ? (
+          <Text variant="body" tone="muted">
+            se încarcă…
+          </Text>
+        ) : null}
+
+        {isError ? (
+          <Card>
+            <Text variant="body" tone="secondary">
+              Offline — pornește API-ul.
+            </Text>
+          </Card>
+        ) : null}
+
+        {(accounts ?? []).map((a) => (
+          <Card key={a.id}>
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text variant="body">{a.name}</Text>
+                <Text variant="small" tone="muted">
+                  {a.domain === 'business' ? 'Firmă' : 'Personal'} ·{' '}
+                  {a.accountClass === 'liability' ? 'datorie' : 'activ'}
+                </Text>
+              </View>
+              <Money
+                value={Number(a.currentBalance)}
+                currency={a.currency}
+                variant="title"
+              />
+            </View>
+          </Card>
+        ))}
+
+        {!isLoading && !isError && (accounts?.length ?? 0) === 0 ? (
+          <Card>
+            <Text variant="body" tone="secondary">
+              Niciun cont încă. Adaugă primul cont ca să pornească averea netă.
+            </Text>
+          </Card>
+        ) : null}
+
+        <Button
+          label="+ Adaugă cont"
+          variant="secondary"
+          onPress={() => router.push('/account/new')}
+        />
+      </View>
+    </Screen>
   );
 }

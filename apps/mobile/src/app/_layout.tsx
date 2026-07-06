@@ -45,6 +45,10 @@ export default function RootLayout() {
           name="event/new"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
+        <Stack.Screen
+          name="account/new"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
       </Stack>
     </Providers>
   );
