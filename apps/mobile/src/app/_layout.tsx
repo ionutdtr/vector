@@ -91,6 +91,19 @@ export default function RootLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="discipline"
+          options={{
+            headerShown: true,
+            title: 'Discipline Score',
+            headerStyle: { backgroundColor: colors.bg.base },
+            headerTintColor: colors.accent.default,
+            headerTitleStyle: {
+              fontFamily: 'Inter_600SemiBold',
+              color: colors.content.primary,
+            },
+          }}
+        />
       </Stack>
     </Providers>
   );

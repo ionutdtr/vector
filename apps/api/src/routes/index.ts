@@ -5,6 +5,7 @@ import { authMiddleware } from '../middleware/auth';
 import type { AppEnv } from '../env';
 import { accountsRoute } from './accounts';
 import { aiRoute } from './ai';
+import { disciplineRoute } from './discipline';
 import { eventsRoute } from './events';
 import { goalsRoute } from './goals';
 import { insightsRoute } from './insights';
@@ -48,5 +49,8 @@ protectedRoutes.route('/ips', ipsRoute);
 protectedRoutes.route('/insights', insightsRoute);
 protectedRoutes.route('/goals', goalsRoute);
 
-// Phase 3 — the AI (recommend + chat; simulate is Phase 4)
+// Phase 3 — the AI (recommend + chat + simulate)
 protectedRoutes.route('/ai', aiRoute);
+
+// Phase 5 — the discipline score
+protectedRoutes.route('/discipline', disciplineRoute);

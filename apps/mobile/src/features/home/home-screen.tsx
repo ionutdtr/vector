@@ -14,6 +14,7 @@ import {
   SectionTitle,
   Text,
 } from '@shared/ui';
+import { DisciplineCard } from '@features/discipline/discipline-card';
 import { GoalCard } from '@features/goals/goal-card';
 
 /**
@@ -78,6 +79,9 @@ export function HomeScreen() {
 
       {/* Risk alert — live from the rules engine */}
       {warning ? <InsightCard insight={warning} /> : null}
+
+      {/* Discipline score — deterministic, taps through to the breakdown */}
+      <DisciplineCard />
 
       {/* Today's one recommendation — live from the CFO */}
       <Card tone="accent" shadow={false}>
