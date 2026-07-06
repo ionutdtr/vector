@@ -12,6 +12,13 @@ export interface NetWorthAccount {
   isLiquid: boolean;
 }
 
+export interface NetWorthTrend {
+  d1: number | null;
+  d7: number | null;
+  d30: number | null;
+  series: Array<{ date: string; total: number }>;
+}
+
 export interface NetWorth {
   base: string;
   total: number;
@@ -19,6 +26,7 @@ export interface NetWorth {
   business: number;
   liquid: number;
   accounts: NetWorthAccount[];
+  trend?: NetWorthTrend;
 }
 
 export function useNetWorth() {

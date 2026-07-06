@@ -14,6 +14,7 @@ import {
 import {
   Button,
   Card,
+  Delta,
   InsightCard,
   Markdown,
   Money,
@@ -23,6 +24,7 @@ import {
 } from '@shared/ui';
 import { DisciplineCard } from '@features/discipline/discipline-card';
 import { GoalCard } from '@features/goals/goal-card';
+import { Sparkline } from '@features/networth/sparkline';
 
 /** The Daily Briefing — net worth, discipline, one recommendation, goal, what's next. */
 export function HomeScreen() {
@@ -59,13 +61,33 @@ export function HomeScreen() {
         <View className="mt-1">
           <Money value={nw?.total ?? 0} currency={nw?.base ?? 'RON'} variant="display" />
         </View>
-        <Text variant="caption" tone="muted" style={{ marginTop: 8 }}>
-          {isLoading
-            ? 'se actualizează…'
-            : isError
-              ? 'offline — pornește API-ul'
-              : `Lichiditate ${formatAmount(nw?.liquid ?? 0)} ${nw?.base ?? 'RON'}`}
-        </Text>
+
+        <View className="mt-3 flex-row items-end justify-between">
+          <View className="gap-2">
+            {nw?.trend?.d7 != null ? (
+              <View className="flex-row items-center gap-2">
+                <Delta value={nw.trend.d7} />
+                <Text variant="small" tone="muted">
+                  7 zile
+                </Text>
+              </View>
+            ) : (
+              <Text variant="small" tone="muted">
+                istoricul se acumulează
+              </Text>
+            )}
+            <Text variant="caption" tone="muted">
+              {isLoading
+                ? 'se actualizează…'
+                : isError
+                  ? 'offline — pornește API-ul'
+                  : `Lichiditate ${formatAmount(nw?.liquid ?? 0)} ${nw?.base ?? 'RON'}`}
+            </Text>
+          </View>
+          {(nw?.trend?.series?.length ?? 0) >= 2 ? (
+            <Sparkline data={(nw?.trend?.series ?? []).map((p) => p.total)} />
+          ) : null}
+        </View>
 
         <View className="mt-6 flex-row gap-3">
           <View className="flex-1 rounded-md bg-bg-surface2 p-4">
