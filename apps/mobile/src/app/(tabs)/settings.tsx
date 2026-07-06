@@ -77,6 +77,23 @@ export default function SettingsScreen() {
       </View>
 
       <View className="gap-3">
+        <SectionTitle>Fluxuri</SectionTitle>
+        <Card onPress={() => router.push('/recurring')}>
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text variant="body">Plăți recurente</Text>
+              <Text variant="small" tone="muted">
+                Chirie, leasing, abonamente, salariu
+              </Text>
+            </View>
+            <Text variant="title" tone="muted">
+              ›
+            </Text>
+          </View>
+        </Card>
+      </View>
+
+      <View className="gap-3">
         <SectionTitle>Conștiință</SectionTitle>
         <Card onPress={() => router.push('/ips')}>
           <View className="flex-row items-center justify-between">

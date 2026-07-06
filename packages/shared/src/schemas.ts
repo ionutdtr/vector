@@ -67,6 +67,19 @@ export const simulateInputSchema = z.object({
 });
 export type SimulateInput = z.infer<typeof simulateInputSchema>;
 
+/** A recurring cash flow (rent, leasing, subscription, salary). */
+export const recurringInputSchema = z.object({
+  domain: z.enum(DOMAINS),
+  type: z.enum(EVENT_TYPES),
+  title: z.string().min(1).max(120),
+  amount: money,
+  currency: currency.default('RON'),
+  cadence: z.enum(['monthly', 'weekly', 'yearly', 'every_28d']).default('monthly'),
+  nextOccurrence: z.string().date(),
+  accountId: z.string().uuid().optional(),
+});
+export type RecurringInput = z.infer<typeof recurringInputSchema>;
+
 export const onboardingSchema = z.object({
   firstName: z.string().min(1).max(60),
   baseCurrency: currency.default('RON'),

@@ -117,6 +117,23 @@ export default function RootLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="recurring/index"
+          options={{
+            headerShown: true,
+            title: 'Plăți recurente',
+            headerStyle: { backgroundColor: colors.bg.base },
+            headerTintColor: colors.accent.default,
+            headerTitleStyle: {
+              fontFamily: 'Inter_600SemiBold',
+              color: colors.content.primary,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="recurring/new"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
       </Stack>
     </Providers>
   );

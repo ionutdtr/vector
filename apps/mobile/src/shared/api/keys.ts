@@ -7,4 +7,5 @@ export const queryKeys = {
   goals: ['goals'] as const,
   discipline: ['discipline'] as const,
   briefing: ['briefing'] as const,
+  recurring: ['recurring'] as const,
 };

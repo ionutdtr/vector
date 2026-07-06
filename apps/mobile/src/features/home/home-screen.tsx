@@ -154,11 +154,23 @@ export function HomeScreen() {
 
       {/* Upcoming payments — live from recurring (next 14 days) */}
       <View className="gap-3">
-        <SectionTitle>Urmează</SectionTitle>
-        <Card>
+        <SectionTitle
+          action={
+            <Text
+              variant="caption"
+              tone="accent"
+              onPress={() => router.push('/recurring/new')}
+            >
+              + Adaugă
+            </Text>
+          }
+        >
+          Urmează
+        </SectionTitle>
+        <Card onPress={() => router.push('/recurring')}>
           {upcoming.length === 0 ? (
             <Text variant="body" tone="muted">
-              Nimic programat în 14 zile.
+              Nimic programat în 14 zile. Adaugă plăți recurente.
             </Text>
           ) : (
             upcoming.map((u, idx) => (

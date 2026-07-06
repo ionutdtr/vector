@@ -12,6 +12,7 @@ import { goalsRoute } from './goals';
 import { insightsRoute } from './insights';
 import { ipsRoute } from './ips';
 import { networthRoute } from './networth';
+import { recurringRoute } from './recurring';
 import { reviewsRoute } from './reviews';
 
 /**
@@ -45,6 +46,7 @@ protectedRoutes.get('/me', async (c) => {
 protectedRoutes.route('/briefing', briefingRoute);
 protectedRoutes.route('/accounts', accountsRoute);
 protectedRoutes.route('/events', eventsRoute);
+protectedRoutes.route('/recurring', recurringRoute);
 protectedRoutes.route('/networth', networthRoute);
 
 // Phase 2 — the conscience + goals

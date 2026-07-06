@@ -25,6 +25,19 @@ export const DOMAIN_OPTIONS = [
   { key: 'business', label: 'Firmă' },
 ] as const;
 
+export const CADENCE_OPTIONS = [
+  { key: 'monthly', label: 'Lunar' },
+  { key: 'weekly', label: 'Săptămânal' },
+  { key: 'yearly', label: 'Anual' },
+] as const;
+
+export const RECURRING_TYPE_OPTIONS = [
+  { key: 'expense', label: 'Cheltuială' },
+  { key: 'income', label: 'Venit' },
+  { key: 'subscription', label: 'Abonament' },
+  { key: 'investment', label: 'Investiție' },
+] as const;
+
 export const GOAL_KIND_OPTIONS = [
   { key: 'apartment', label: 'Apartament' },
   { key: 'emergency_fund', label: 'Fond urgență' },
