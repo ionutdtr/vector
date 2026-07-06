@@ -1,0 +1,29 @@
+import { useQuery } from '@tanstack/react-query';
+import { api } from './client';
+
+export interface NetWorthAccount {
+  id: string;
+  name: string;
+  domain: 'personal' | 'business';
+  type: string;
+  class: 'asset' | 'liability';
+  balance: number;
+  currency: string;
+  isLiquid: boolean;
+}
+
+export interface NetWorth {
+  base: string;
+  total: number;
+  personal: number;
+  business: number;
+  liquid: number;
+  accounts: NetWorthAccount[];
+}
+
+export function useNetWorth() {
+  return useQuery({
+    queryKey: ['networth'],
+    queryFn: () => api.get<NetWorth>('/networth'),
+  });
+}

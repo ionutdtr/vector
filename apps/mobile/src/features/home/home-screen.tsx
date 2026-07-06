@@ -1,11 +1,15 @@
 import { View } from 'react-native';
-import { Button, Card, Delta, Money, Screen, SectionTitle, Text } from '@shared/ui';
+import { useNetWorth } from '@shared/api/networth';
+import { formatAmount } from '@shared/lib/format';
+import { Button, Card, Money, Screen, SectionTitle, Text } from '@shared/ui';
 
 /**
- * The Daily Briefing. Phase 0 uses static representative data to showcase the
- * design system; it binds to /networth, /ai/recommend and /goals in Phases 1–3.
+ * The Daily Briefing. The net-worth hero is LIVE (from /networth on Neon).
+ * Recommendation / goal / upcoming remain static until Phases 2–3 wire them.
  */
 export function HomeScreen() {
+  const { data: nw, isLoading, isError } = useNetWorth();
+
   return (
     <Screen>
       {/* Greeting */}
@@ -16,20 +20,21 @@ export function HomeScreen() {
         <Text variant="h1">Bună dimineața, Ionut</Text>
       </View>
 
-      {/* Net worth hero */}
+      {/* Net worth hero — live */}
       <Card tone="hero">
         <Text variant="caption" tone="secondary">
           Avere netă
         </Text>
         <View className="mt-1">
-          <Money value={812340} variant="display" />
+          <Money value={nw?.total ?? 0} currency={nw?.base ?? 'RON'} variant="display" />
         </View>
-        <View className="mt-3 flex-row items-center gap-3">
-          <Delta value={1240} currency="RON" percent={0.15} />
-          <Text variant="caption" tone="muted">
-            azi
-          </Text>
-        </View>
+        <Text variant="caption" tone="muted" style={{ marginTop: 8 }}>
+          {isLoading
+            ? 'se actualizează…'
+            : isError
+              ? 'offline — pornește API-ul'
+              : `Lichiditate ${formatAmount(nw?.liquid ?? 0)} ${nw?.base ?? 'RON'}`}
+        </Text>
 
         <View className="mt-6 flex-row gap-3">
           <View className="flex-1 rounded-md bg-bg-surface2 p-4">
@@ -37,7 +42,7 @@ export function HomeScreen() {
               Personal
             </Text>
             <View className="mt-1">
-              <Money value={521200} variant="title" />
+              <Money value={nw?.personal ?? 0} variant="title" />
             </View>
           </View>
           <View className="flex-1 rounded-md bg-bg-surface2 p-4">
@@ -45,13 +50,13 @@ export function HomeScreen() {
               Firmă
             </Text>
             <View className="mt-1">
-              <Money value={291140} variant="title" />
+              <Money value={nw?.business ?? 0} variant="title" />
             </View>
           </View>
         </View>
       </Card>
 
-      {/* Today's one recommendation */}
+      {/* Today's one recommendation (static until Phase 3) */}
       <Card tone="accent" shadow={false}>
         <Text variant="small" tone="accent">
           RECOMANDAREA ZILEI
@@ -67,7 +72,7 @@ export function HomeScreen() {
         <Button label="Simulează" className="mt-5" onPress={() => {}} />
       </Card>
 
-      {/* Apartment goal */}
+      {/* Apartment goal (static until Phase 2) */}
       <View className="gap-3">
         <SectionTitle>Apartament 2028</SectionTitle>
         <Card>
@@ -86,7 +91,7 @@ export function HomeScreen() {
         </Card>
       </View>
 
-      {/* Upcoming */}
+      {/* Upcoming (static until Phase 2) */}
       <View className="gap-3">
         <SectionTitle>Urmează</SectionTitle>
         <Card>
