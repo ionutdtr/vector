@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
+import { queryKeys } from './keys';
 
 export interface Recommendation {
   id: string;
@@ -38,11 +39,29 @@ export function useSendMessage() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { message: string; threadId?: string | null }) =>
-      api.post<{ threadId: string; reply: string }>('/ai/chat', {
-        message: vars.message,
-        threadId: vars.threadId ?? undefined,
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['ai', 'chat'] }),
+      api.post<{ threadId: string; reply: string; logged?: boolean }>(
+        '/ai/chat',
+        {
+          message: vars.message,
+          threadId: vars.threadId ?? undefined,
+        },
+      ),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['ai', 'chat'] });
+      // A message can log an event — refresh everything money-related.
+      if (data.logged) {
+        for (const key of [
+          queryKeys.events,
+          queryKeys.networth,
+          queryKeys.accounts,
+          queryKeys.insights,
+          queryKeys.discipline,
+          queryKeys.briefing,
+        ]) {
+          qc.invalidateQueries({ queryKey: key });
+        }
+      }
+    },
   });
 }
 

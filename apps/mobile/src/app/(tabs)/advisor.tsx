@@ -39,8 +39,9 @@ export default function AdvisorScreen() {
         {messages.length === 0 && !isError ? (
           <Card>
             <Text variant="body" tone="secondary">
-              Întreabă-mă orice despre banii tăi. Răspund cu numerele tale reale
-              și îți citez regulile IPS. Calm, direct, fără verbiaj.
+              Întreabă-mă orice despre banii tăi — sau spune-mi ce să notez („am
+              dat 200 pe benzină"). Răspund cu numerele tale reale și îți citez
+              regulile IPS.
             </Text>
           </Card>
         ) : null}

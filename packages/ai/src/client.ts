@@ -55,6 +55,24 @@ export async function generateStructured(args: {
   return toolUse.input;
 }
 
+/** Tool-enabled turn: the model decides to reply in text OR call a tool. */
+export async function generateWithTools(args: {
+  model: string;
+  system: string;
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+  tools: Array<Record<string, unknown>>;
+  maxTokens?: number;
+}): Promise<Content> {
+  const data = await callAnthropic({
+    model: args.model,
+    max_tokens: args.maxTokens ?? 1024,
+    system: [{ type: 'text', text: args.system, cache_control: { type: 'ephemeral' } }],
+    messages: args.messages,
+    tools: args.tools,
+  });
+  return data.content ?? [];
+}
+
 /** Free-text reply (used by the Advisor chat). */
 export async function generateText(args: {
   model: string;

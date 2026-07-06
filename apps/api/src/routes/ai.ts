@@ -1,15 +1,25 @@
 import {
   buildFinancialState,
-  generateChatReply,
+  generateChatTurn,
   generateRecommendation,
   generateSimulation,
   hasAiKey,
 } from '@vector/ai';
 import { aiMessages, aiThreads, db, insights } from '@vector/db';
-import { simulateInputSchema } from '@vector/shared';
+import { type EventInput, simulateInputSchema } from '@vector/shared';
 import { and, asc, desc, eq, gte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
+import { createEvent } from '../services/events';
+
+const TYPE_RO: Record<string, string> = {
+  expense: 'cheltuială',
+  income: 'venit',
+  investment: 'investiție',
+  dividend: 'dividend',
+  subscription: 'abonament',
+  smoking: 'fumat',
+};
 
 export const aiRoute = new Hono<AppEnv>();
 
@@ -107,17 +117,36 @@ aiRoute.post('/chat', async (c) => {
   await db.insert(aiMessages).values({ threadId: tid, role: 'user', content: message });
 
   const state = await buildFinancialState(db, userId);
-  const reply = await generateChatReply(
+  const turn = await generateChatTurn(
     state,
     history.map((m) => ({ role: m.role, content: m.content })),
     message,
   );
 
+  let reply: string;
+  let logged = false;
+  if (turn.kind === 'log') {
+    const { event, insights: evInsights } = await createEvent(userId, {
+      domain: turn.event.domain as 'personal' | 'business',
+      type: turn.event.type as EventInput['type'],
+      title: turn.event.title,
+      amount: turn.event.amount,
+      currency: 'RON',
+      occurredAt: new Date().toISOString(),
+    });
+    logged = true;
+    reply = `Am notat: **${event.title}** — ${turn.event.amount} RON (${TYPE_RO[turn.event.type] ?? turn.event.type}).`;
+    const warn = evInsights.find((i) => i.kind === 'warning');
+    if (warn) reply += `\n\n${warn.body}`;
+  } else {
+    reply = turn.text;
+  }
+
   await db
     .insert(aiMessages)
     .values({ threadId: tid, role: 'assistant', content: reply });
 
-  return c.json({ threadId: tid, reply });
+  return c.json({ threadId: tid, reply, logged });
 });
 
 /** Decision Simulator: "Should I do this?" → structured, visual impact + verdict. */

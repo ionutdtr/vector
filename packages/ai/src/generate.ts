@@ -5,7 +5,7 @@ import type {
   AiSimulation,
   FinancialState,
 } from '@vector/shared';
-import { generateStructured, generateText } from './client';
+import { generateStructured, generateText, generateWithTools } from './client';
 import { MODELS } from './models';
 import {
   CFO_SYSTEM_PROMPT,
@@ -281,6 +281,97 @@ export async function generateInsight(
     maxTokens: 512,
   });
   return aiInsightSchema.parse(raw);
+}
+
+const LOG_EVENT_TOOL = {
+  name: 'log_event',
+  description:
+    'Log a financial event the user just told you happened (an expense, income, investment, dividend, subscription, or smoking). Call this ONLY when the user is recording something factual ("am dat 200 pe benzină", "mi-a intrat salariul 18000"), NOT when they ask a question or seek advice. If unsure, reply in text instead.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      type: {
+        type: 'string',
+        enum: [
+          'expense',
+          'income',
+          'investment',
+          'dividend',
+          'subscription',
+          'smoking',
+        ],
+      },
+      title: { type: 'string', description: 'Short label, e.g. "Benzină".' },
+      amount: { type: 'number', description: 'Positive amount, in RON.' },
+      domain: { type: 'string', enum: ['personal', 'business'] },
+    },
+    required: ['type', 'title', 'amount', 'domain'],
+  },
+} as const;
+
+export type ChatTurn =
+  | { kind: 'reply'; text: string }
+  | {
+      kind: 'log';
+      event: { type: string; title: string; amount: number; domain: string };
+    };
+
+/**
+ * One advisor turn. The model either replies in free text (kept free-text for
+ * quality) or calls log_event to record something the user just told it.
+ */
+export async function generateChatTurn(
+  state: FinancialState,
+  history: Array<{ role: 'user' | 'assistant'; content: string }>,
+  message: string,
+): Promise<ChatTurn> {
+  const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
+    {
+      role: 'user',
+      content: `Context — FinancialState-ul meu curent (doar agregate):\n${JSON.stringify(state)}`,
+    },
+    {
+      role: 'assistant',
+      content: 'Am contextul tău. Întreabă-mă, sau spune-mi ce să notez.',
+    },
+    ...history,
+    { role: 'user', content: message },
+  ];
+
+  const content = await generateWithTools({
+    model: MODELS.chat,
+    system: CFO_SYSTEM_PROMPT,
+    messages,
+    tools: [LOG_EVENT_TOOL as unknown as Record<string, unknown>],
+  });
+
+  const toolUse = content.find(
+    (b) => b.type === 'tool_use' && b.name === 'log_event',
+  );
+  const e = toolUse?.input as
+    | { type?: string; title?: string; amount?: number; domain?: string }
+    | undefined;
+  if (
+    e &&
+    typeof e.amount === 'number' &&
+    e.amount > 0 &&
+    e.title &&
+    e.type &&
+    e.domain
+  ) {
+    return {
+      kind: 'log',
+      event: {
+        type: e.type,
+        title: String(e.title),
+        amount: e.amount,
+        domain: e.domain,
+      },
+    };
+  }
+
+  const text = content.find((b) => b.type === 'text')?.text ?? '';
+  return { kind: 'reply', text };
 }
 
 /** Advisor chat reply. Persona is cached; state rides as a leading context turn. */
