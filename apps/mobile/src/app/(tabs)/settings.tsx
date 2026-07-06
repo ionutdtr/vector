@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 import { useAccounts } from '@shared/api/accounts';
+import { useAuth } from '@shared/auth/store';
 import { Button, Card, Money, Screen, SectionTitle, Text } from '@shared/ui';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { data: accounts, isLoading, isError } = useAccounts();
+  const signOut = useAuth((s) => s.signOut);
 
   return (
     <Screen>
@@ -89,6 +91,15 @@ export default function SettingsScreen() {
             </Text>
           </View>
         </Card>
+      </View>
+
+      <View className="gap-3">
+        <SectionTitle>Cont</SectionTitle>
+        <Button
+          label="Deconectează-te"
+          variant="secondary"
+          onPress={() => signOut()}
+        />
       </View>
     </Screen>
   );

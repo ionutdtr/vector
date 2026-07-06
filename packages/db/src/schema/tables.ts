@@ -35,7 +35,9 @@ const createdAt = timestamp({ withTimezone: true }).defaultNow().notNull();
 
 // ── profiles ────────────────────────────────────────────────────────────────
 export const profiles = pgTable('profiles', {
-  id: uuid().primaryKey(), // matches Neon Auth user id
+  id: uuid().primaryKey().defaultRandom(),
+  email: text().unique(),
+  passwordHash: text(),
   firstName: text().notNull(),
   baseCurrency: text().notNull().default('RON'),
   timezone: text().notNull().default('Europe/Bucharest'),

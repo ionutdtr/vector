@@ -8,6 +8,8 @@ interface FieldProps {
   onChangeText: (v: string) => void;
   placeholder?: string;
   keyboardType?: KeyboardTypeOptions;
+  secure?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }
 
 export function Field({
@@ -16,6 +18,8 @@ export function Field({
   onChangeText,
   placeholder,
   keyboardType,
+  secure,
+  autoCapitalize = 'sentences',
 }: FieldProps) {
   return (
     <View className="gap-2">
@@ -30,6 +34,9 @@ export function Field({
         placeholder={placeholder}
         placeholderTextColor={colors.content.muted}
         keyboardType={keyboardType}
+        secureTextEntry={secure}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={!secure}
         className="h-14 rounded-md bg-bg-surface2 px-4"
         style={{
           fontFamily: 'Inter_500Medium',

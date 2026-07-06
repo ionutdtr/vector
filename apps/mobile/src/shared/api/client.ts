@@ -1,21 +1,22 @@
+import { getToken } from '../auth/token';
+
 /**
  * Typed API client. Talks to the Vector backend (apps/api).
  *
  * Base URL: set EXPO_PUBLIC_API_URL. Defaults to localhost:3000 (iOS simulator
  * shares the host network). For a physical iPhone, set it to your Mac's LAN IP.
  *
- * Auth: a dev-only user id until Neon Auth is wired (Phase 9). Replaced by the
- * Stack Auth token in the Authorization header at that point.
+ * Auth: the self-hosted JWT (from expo-secure-store) is sent as a Bearer token.
  */
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
-const DEV_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
       'content-type': 'application/json',
-      'x-debug-user-id': DEV_USER_ID,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
   });

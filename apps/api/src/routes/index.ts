@@ -1,3 +1,5 @@
+import { db, profiles } from '@vector/db';
+import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { authMiddleware } from '../middleware/auth';
@@ -16,6 +18,25 @@ import { networthRoute } from './networth';
 export const protectedRoutes = new Hono<AppEnv>();
 
 protectedRoutes.use('*', authMiddleware);
+
+protectedRoutes.get('/me', async (c) => {
+  const userId = c.get('userId');
+  const [row] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  return c.json({
+    user: {
+      id: row.id,
+      email: row.email,
+      firstName: row.firstName,
+      baseCurrency: row.baseCurrency,
+      onboardedAt: row.onboardedAt,
+    },
+  });
+});
 
 // Phase 1 — the spine
 protectedRoutes.route('/accounts', accountsRoute);

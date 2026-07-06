@@ -7,10 +7,11 @@ import {
   Inter_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { useAuth } from '@shared/auth/store';
 import { Providers } from '@shared/providers';
 import { colors } from '@shared/theme/colors';
 
@@ -25,11 +26,27 @@ export default function RootLayout() {
     Inter_800ExtraBold,
   });
 
-  useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
+  const status = useAuth((s) => s.status);
+  const hydrate = useAuth((s) => s.hydrate);
+  const segments = useSegments();
+  const router = useRouter();
 
-  if (!loaded) return null;
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (!loaded || status === 'loading') return;
+    SplashScreen.hideAsync();
+    const inAuthGroup = segments[0] === '(auth)';
+    if (status === 'guest' && !inAuthGroup) {
+      router.replace('/(auth)/sign-in');
+    } else if (status === 'authed' && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [loaded, status, segments, router]);
+
+  if (!loaded || status === 'loading') return null;
 
   return (
     <Providers>
@@ -40,6 +57,7 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: colors.bg.base },
         }}
       >
+        <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="event/new"
