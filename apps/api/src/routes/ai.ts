@@ -2,9 +2,11 @@ import {
   buildFinancialState,
   generateChatReply,
   generateRecommendation,
+  generateSimulation,
   hasAiKey,
 } from '@vector/ai';
 import { aiMessages, aiThreads, db, insights } from '@vector/db';
+import { simulateInputSchema } from '@vector/shared';
 import { and, asc, desc, eq, gte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
@@ -118,6 +120,26 @@ aiRoute.post('/chat', async (c) => {
   return c.json({ threadId: tid, reply });
 });
 
-aiRoute.post('/simulate', (c) =>
-  c.json({ error: 'Not implemented yet', comingIn: 'Phase 4' }, 501),
-);
+/** Decision Simulator: "Should I do this?" → structured, visual impact + verdict. */
+aiRoute.post('/simulate', async (c) => {
+  const userId = c.get('userId');
+  if (!hasAiKey()) return c.json(AI_UNAVAILABLE, 503);
+
+  const parsed = simulateInputSchema.safeParse(
+    await c.req.json().catch(() => ({})),
+  );
+  if (!parsed.success) {
+    return c.json({ error: 'invalid input', issues: parsed.error.issues }, 400);
+  }
+
+  const state = await buildFinancialState(db, userId);
+  const simulation = await generateSimulation(state, {
+    title: parsed.data.title,
+    amount: parsed.data.amount,
+    currency: parsed.data.currency,
+    recurring: parsed.data.recurring,
+    domain: parsed.data.domain,
+  });
+
+  return c.json({ simulation });
+});

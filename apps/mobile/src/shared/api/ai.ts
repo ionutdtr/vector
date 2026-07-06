@@ -45,3 +45,35 @@ export function useSendMessage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['ai', 'chat'] }),
   });
 }
+
+export type Verdict = 'yes' | 'no' | 'wait' | 'conditional';
+
+export interface Simulation {
+  verdict: Verdict;
+  reason: string;
+  impact: {
+    liquidity: { before: number; after: number; floor: number; breaches: boolean };
+    net_worth: { delta: number };
+    apartment: { date_shift_days: number };
+    investments: { delta_trajectory: number };
+  };
+  rules_touched: string[];
+  alternative?: string;
+}
+
+export interface SimulateVars {
+  title: string;
+  amount: number;
+  currency?: string;
+  domain?: 'personal' | 'business';
+  recurring?: boolean;
+}
+
+export function useSimulate() {
+  return useMutation({
+    mutationFn: (vars: SimulateVars) =>
+      api
+        .post<{ simulation: Simulation }>('/ai/simulate', vars)
+        .then((r) => r.simulation),
+  });
+}

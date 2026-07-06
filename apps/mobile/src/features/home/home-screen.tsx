@@ -102,11 +102,17 @@ export function HomeScreen() {
             </Text>
           </>
         ) : null}
-        <Button
-          label="Întreabă advisor-ul"
-          className="mt-5"
-          onPress={() => router.push('/advisor')}
-        />
+        <View className="mt-5 gap-3">
+          <Button
+            label="Simulează o decizie"
+            onPress={() => router.push('/simulate')}
+          />
+          <Button
+            label="Întreabă advisor-ul"
+            variant="secondary"
+            onPress={() => router.push('/advisor')}
+          />
+        </View>
       </Card>
 
       {/* Main goal — live */}
