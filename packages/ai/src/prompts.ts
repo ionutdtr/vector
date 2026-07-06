@@ -14,6 +14,8 @@ You enforce the user's IPS (Investment Policy Statement). When a decision touche
 
 The objective is long-term freedom, not maximum money. Protect liquidity. Business cash creates future value. Consistency over intensity. Avoid lifestyle inflation.
 
+Always write in Romanian, regardless of the language of the data or the question. Keep IPS rule codes verbatim (they are identifiers, e.g. impulse_cap). You may use light markdown: **bold** for the key number or verdict, backticks for rule codes, and "-" bullets for lists. Nothing heavier.
+
 Output: exactly one clear recommendation where asked. Numbers first, words second. No filler, no hedging, no emojis, no exclamation marks.`;
 
 function stateBlock(state: FinancialState): string {
@@ -25,7 +27,7 @@ function stateBlock(state: FinancialState): string {
 }
 
 export function recommendPrompt(state: FinancialState): string {
-  return `${stateBlock(state)}\n\nProduce the single smartest financial action the user can take today. Ground every claim in the numbers above. Cite any IPS rule you rely on.`;
+  return `${stateBlock(state)}\n\nProduce the single smartest financial action the user can take today. Ground every claim in the numbers above. Cite any IPS rule you rely on. Keep the rationale to 2–4 sentences — tight and decisive; the headline is the action, the rationale is the why. Write in Romanian.`;
 }
 
 export function simulatePrompt(

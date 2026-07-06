@@ -15,6 +15,7 @@ import {
   Button,
   Card,
   InsightCard,
+  Markdown,
   Money,
   Screen,
   SectionTitle,
@@ -110,9 +111,9 @@ export function HomeScreen() {
             <Text variant="title" style={{ marginTop: 8 }}>
               {rec.data.title}
             </Text>
-            <Text variant="body" tone="secondary" style={{ marginTop: 8 }}>
-              {rec.data.body}
-            </Text>
+            <View style={{ marginTop: 8 }}>
+              <Markdown text={rec.data.body} />
+            </View>
           </>
         ) : null}
         <View className="mt-5 gap-3">

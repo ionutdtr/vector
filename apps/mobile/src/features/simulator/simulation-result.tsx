@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import type { Simulation, Verdict } from '@shared/api/ai';
-import { Card, Money, Text, type Tone } from '@shared/ui';
+import { Card, Markdown, Money, Text, type Tone } from '@shared/ui';
 import { LiquidityBar } from './liquidity-bar';
 
 const VERDICT: Record<Verdict, { label: string; tone: Tone }> = {
@@ -58,9 +58,9 @@ export function SimulationResult({
         <Text variant="display" tone={v.tone} style={{ marginTop: 2 }}>
           {v.label}
         </Text>
-        <Text variant="body" tone="secondary" style={{ marginTop: 10 }}>
-          {sim.reason}
-        </Text>
+        <View style={{ marginTop: 10 }}>
+          <Markdown text={sim.reason} />
+        </View>
       </Card>
 
       {/* Liquidity — the core visual */}
@@ -117,9 +117,9 @@ export function SimulationResult({
           <Text variant="small" tone="accent">
             ALTERNATIVĂ
           </Text>
-          <Text variant="body" style={{ marginTop: 6 }}>
-            {sim.alternative}
-          </Text>
+          <View style={{ marginTop: 6 }}>
+            <Markdown text={sim.alternative} tone="primary" />
+          </View>
         </Card>
       ) : null}
     </View>

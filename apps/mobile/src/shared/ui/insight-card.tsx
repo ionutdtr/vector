@@ -9,6 +9,7 @@ import {
 import { View } from 'react-native';
 import { colors } from '../theme/colors';
 import { Card } from './card';
+import { Markdown } from './markdown';
 import { Text, type Tone } from './text';
 
 interface InsightLike {
@@ -46,9 +47,9 @@ export function InsightCard({ insight }: { insight: InsightLike }) {
       <Text variant="title" style={{ marginTop: 8 }}>
         {insight.title}
       </Text>
-      <Text variant="body" tone="secondary" style={{ marginTop: 6 }}>
-        {insight.body}
-      </Text>
+      <View style={{ marginTop: 6 }}>
+        <Markdown text={insight.body} />
+      </View>
     </Card>
   );
 }

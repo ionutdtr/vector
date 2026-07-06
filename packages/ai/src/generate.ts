@@ -24,8 +24,11 @@ import {
 const RECOMMENDATION_TOOL_SCHEMA = {
   type: 'object',
   properties: {
-    headline: { type: 'string', description: 'One sharp sentence, the action.' },
-    rationale: { type: 'string', description: 'Why — grounded in the numbers.' },
+    headline: { type: 'string', description: 'One sharp sentence, the action. In Romanian.' },
+    rationale: {
+      type: 'string',
+      description: 'Why — grounded in the numbers, 2–4 sentences, tight. In Romanian.',
+    },
     action: {
       type: 'object',
       properties: {

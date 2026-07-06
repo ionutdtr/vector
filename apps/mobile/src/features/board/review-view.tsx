@@ -7,7 +7,7 @@ import {
 import { View } from 'react-native';
 import type { Review } from '@shared/api/reviews';
 import { colors } from '@shared/theme/colors';
-import { Card, Text, type Tone } from '@shared/ui';
+import { Card, Markdown, Text, type Tone } from '@shared/ui';
 
 function Block({
   title,
@@ -63,9 +63,9 @@ export function ReviewView({ review }: { review: Review }) {
         <Text variant="h3" style={{ marginTop: 6 }}>
           {review.headline}
         </Text>
-        <Text variant="body" tone="secondary" style={{ marginTop: 10 }}>
-          {review.narrative}
-        </Text>
+        <View style={{ marginTop: 10 }}>
+          <Markdown text={review.narrative} />
+        </View>
       </Card>
 
       <Block

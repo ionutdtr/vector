@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat, useSendMessage } from '@shared/api/ai';
 import { colors } from '@shared/theme/colors';
-import { Button, Card, Text } from '@shared/ui';
+import { Button, Card, Markdown, Text } from '@shared/ui';
 
 export default function AdvisorScreen() {
   const insets = useSafeAreaInsets();
@@ -61,12 +61,10 @@ export default function AdvisorScreen() {
             <View
               className={`max-w-[85%] rounded-lg px-4 py-3 ${m.role === 'user' ? 'bg-accent' : 'bg-bg-surface'}`}
             >
-              <Text
-                variant="body"
+              <Markdown
+                text={m.content}
                 tone={m.role === 'user' ? 'primary' : 'secondary'}
-              >
-                {m.content}
-              </Text>
+              />
             </View>
           </View>
         ))}
