@@ -154,3 +154,29 @@ eventsRoute.post('/', async (c) => {
 
   return c.json({ event: row, insights: [...triggered, ...aiInsights] }, 201);
 });
+
+/** Delete an event and revert its balance side-effect (insights cascade). */
+eventsRoute.delete('/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  const [ev] = await db
+    .select()
+    .from(events)
+    .where(and(eq(events.id, id), eq(events.userId, userId)))
+    .limit(1);
+  if (!ev) return c.json({ error: 'Not found' }, 404);
+
+  const amount = Number(ev.amount);
+  if (ev.type === 'transfer' && ev.accountId && ev.counterAccountId) {
+    await adjustBalance(ev.accountId, amount); // undo the -amount
+    await adjustBalance(ev.counterAccountId, -amount); // undo the +amount
+  } else {
+    const sign = (EVENT_SIGN as Record<string, number>)[ev.type] ?? 0;
+    if (sign !== 0 && ev.accountId) {
+      await adjustBalance(ev.accountId, -sign * amount);
+    }
+  }
+
+  await db.delete(events).where(eq(events.id, id));
+  return c.json({ ok: true });
+});

@@ -52,3 +52,18 @@ export function useCreateEvent() {
     },
   });
 }
+
+export function useDeleteEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.del<{ ok: boolean }>(`/events/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.events });
+      qc.invalidateQueries({ queryKey: queryKeys.networth });
+      qc.invalidateQueries({ queryKey: queryKeys.accounts });
+      qc.invalidateQueries({ queryKey: queryKeys.insights });
+      qc.invalidateQueries({ queryKey: queryKeys.discipline });
+      qc.invalidateQueries({ queryKey: queryKeys.briefing });
+    },
+  });
+}

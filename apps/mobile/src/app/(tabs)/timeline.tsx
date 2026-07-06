@@ -1,5 +1,5 @@
-import { View } from 'react-native';
-import { type EventRecord, useEvents } from '@shared/api/events';
+import { Alert, Pressable, View } from 'react-native';
+import { type EventRecord, useDeleteEvent, useEvents } from '@shared/api/events';
 import { type Insight, useInsights } from '@shared/api/insights';
 import { Card, InsightCard, Screen, Text } from '@shared/ui';
 import { EventRow } from '@features/timeline/event-row';
@@ -8,6 +8,14 @@ import { formatDay } from '@features/timeline/group';
 export default function TimelineScreen() {
   const events = useEvents();
   const insights = useInsights();
+  const del = useDeleteEvent();
+
+  const confirmDelete = (e: EventRecord) => {
+    Alert.alert('Șterge evenimentul?', `„${e.title}" — soldul contului se ajustează înapoi.`, [
+      { text: 'Renunță', style: 'cancel' },
+      { text: 'Șterge', style: 'destructive', onPress: () => del.mutate(e.id) },
+    ]);
+  };
   const isLoading = events.isLoading || insights.isLoading;
   const isError = events.isError;
 
@@ -65,10 +73,10 @@ export default function TimelineScreen() {
             {g.events.length > 0 ? (
               <Card>
                 {g.events.map((e, idx) => (
-                  <View key={e.id}>
+                  <Pressable key={e.id} onLongPress={() => confirmDelete(e)}>
                     {idx > 0 ? <View className="h-px bg-hairline" /> : null}
                     <EventRow event={e} />
-                  </View>
+                  </Pressable>
                 ))}
               </Card>
             ) : null}

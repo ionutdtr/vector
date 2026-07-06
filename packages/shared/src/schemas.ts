@@ -44,6 +44,14 @@ export const eventInputSchema = z
   );
 export type EventInput = z.infer<typeof eventInputSchema>;
 
+export const accountUpdateSchema = z.object({
+  name: z.string().min(1).max(80).optional(),
+  currentBalance: money.optional(),
+  isLiquid: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+});
+export type AccountUpdate = z.infer<typeof accountUpdateSchema>;
+
 export const goalInputSchema = z.object({
   kind: z.enum(GOAL_KINDS),
   name: z.string().min(1).max(80),
@@ -54,6 +62,15 @@ export const goalInputSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 export type GoalInput = z.infer<typeof goalInputSchema>;
+
+export const goalUpdateSchema = z.object({
+  name: z.string().min(1).max(80).optional(),
+  targetAmount: money.optional(),
+  currentAmount: money.optional(),
+  targetDate: z.string().date().optional(),
+  priority: z.number().int().min(0).optional(),
+});
+export type GoalUpdate = z.infer<typeof goalUpdateSchema>;
 
 /** Input for the Decision Simulator. */
 export const simulateInputSchema = z.object({

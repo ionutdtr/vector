@@ -1,6 +1,10 @@
 import { accounts, db } from '@vector/db';
-import { accountInputSchema, classForAccountType } from '@vector/shared';
-import { eq } from 'drizzle-orm';
+import {
+  accountInputSchema,
+  accountUpdateSchema,
+  classForAccountType,
+} from '@vector/shared';
+import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
 
@@ -38,4 +42,38 @@ accountsRoute.post('/', async (c) => {
     })
     .returning();
   return c.json({ account: row }, 201);
+});
+
+accountsRoute.patch('/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  const parsed = accountUpdateSchema.safeParse(await c.req.json());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid input', issues: parsed.error.issues }, 400);
+  }
+  const d = parsed.data;
+  const set: Record<string, unknown> = {};
+  if (d.name !== undefined) set.name = d.name;
+  if (d.currentBalance !== undefined) set.currentBalance = String(d.currentBalance);
+  if (d.isLiquid !== undefined) set.isLiquid = d.isLiquid;
+  if (d.isArchived !== undefined) set.isArchived = d.isArchived;
+  if (Object.keys(set).length === 0) {
+    return c.json({ error: 'Nothing to update' }, 400);
+  }
+  const [row] = await db
+    .update(accounts)
+    .set(set)
+    .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
+    .returning();
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  return c.json({ account: row });
+});
+
+accountsRoute.delete('/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  await db
+    .delete(accounts)
+    .where(and(eq(accounts.id, id), eq(accounts.userId, userId)));
+  return c.json({ ok: true });
 });

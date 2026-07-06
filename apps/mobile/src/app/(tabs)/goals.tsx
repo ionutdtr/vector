@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { Pressable } from 'react-native';
 import { useGoals } from '@shared/api/goals';
 import { Button, Card, Screen, Text } from '@shared/ui';
 import { GoalCard } from '@features/goals/goal-card';
@@ -26,7 +27,9 @@ export default function GoalsScreen() {
       ) : null}
 
       {(goals ?? []).map((g) => (
-        <GoalCard key={g.id} goal={g} />
+        <Pressable key={g.id} onPress={() => router.push(`/goal/${g.id}`)}>
+          <GoalCard goal={g} />
+        </Pressable>
       ))}
 
       {!isLoading && !isError && (goals?.length ?? 0) === 0 ? (

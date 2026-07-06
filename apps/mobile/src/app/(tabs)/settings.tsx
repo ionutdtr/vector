@@ -43,10 +43,13 @@ export default function SettingsScreen() {
         ) : null}
 
         {(accounts ?? []).map((a) => (
-          <Card key={a.id}>
+          <Card key={a.id} onPress={() => router.push(`/account/${a.id}`)}>
             <View className="flex-row items-center justify-between">
               <View>
-                <Text variant="body">{a.name}</Text>
+                <Text variant="body">
+                  {a.name}
+                  {a.isArchived ? ' · arhivat' : ''}
+                </Text>
                 <Text variant="small" tone="muted">
                   {a.domain === 'business' ? 'Firmă' : 'Personal'} ·{' '}
                   {a.accountClass === 'liability' ? 'datorie' : 'activ'}

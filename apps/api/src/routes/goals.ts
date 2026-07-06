@@ -1,6 +1,6 @@
 import { db, goals } from '@vector/db';
-import { goalInputSchema } from '@vector/shared';
-import { desc, eq } from 'drizzle-orm';
+import { goalInputSchema, goalUpdateSchema } from '@vector/shared';
+import { and, desc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
 
@@ -37,4 +37,39 @@ goalsRoute.post('/', async (c) => {
     })
     .returning();
   return c.json({ goal: row }, 201);
+});
+
+goalsRoute.patch('/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  const parsed = goalUpdateSchema.safeParse(await c.req.json());
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid input', issues: parsed.error.issues }, 400);
+  }
+  const d = parsed.data;
+  const set: Record<string, unknown> = {};
+  if (d.name !== undefined) set.name = d.name;
+  if (d.targetAmount !== undefined) set.targetAmount = String(d.targetAmount);
+  if (d.currentAmount !== undefined) set.currentAmount = String(d.currentAmount);
+  if (d.targetDate !== undefined) set.targetDate = d.targetDate;
+  if (d.priority !== undefined) set.priority = d.priority;
+  if (Object.keys(set).length === 0) {
+    return c.json({ error: 'Nothing to update' }, 400);
+  }
+  const [row] = await db
+    .update(goals)
+    .set(set)
+    .where(and(eq(goals.id, id), eq(goals.userId, userId)))
+    .returning();
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  return c.json({ goal: row });
+});
+
+goalsRoute.delete('/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  await db
+    .delete(goals)
+    .where(and(eq(goals.id, id), eq(goals.userId, userId)));
+  return c.json({ ok: true });
 });
