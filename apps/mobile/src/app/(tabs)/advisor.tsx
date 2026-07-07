@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -47,12 +48,22 @@ export default function AdvisorScreen() {
   const [pending, setPending] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
+  // Track the keyboard so the composer clears the glass tab bar only when idle;
+  // when typing, the tab bar is hidden behind the keyboard, so it must sit flush.
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardWillShow', () => setKeyboardUp(true));
+    const hide = Keyboard.addListener('keyboardWillHide', () => setKeyboardUp(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
   const needsVerify = me?.emailVerified === false;
   const messages = data?.messages ?? [];
   const isEmpty = messages.length === 0 && !pending;
-  // Glass tab bar is an absolute overlay (height 62 + safe area in the tabs
-  // layout); the composer must clear it when idle and sit flush above the
-  // keyboard when typing — hence the matching keyboardVerticalOffset.
+  // Glass tab bar is an absolute overlay (height 62 + safe area in the tabs layout).
   const tabBar = 62 + insets.bottom;
 
   const sendText = (raw: string) => {
@@ -122,7 +133,7 @@ export default function AdvisorScreen() {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={tabBar}
+        keyboardVerticalOffset={0}
       >
         {input.trim() === '' ? (
           <PromptChips onPick={sendText} disabled={send.isPending} />
@@ -130,7 +141,7 @@ export default function AdvisorScreen() {
 
         <View
           className="flex-row items-center gap-2 px-5"
-          style={{ paddingBottom: tabBar + 6 }}
+          style={{ paddingBottom: keyboardUp ? 8 : tabBar + 6 }}
         >
           <TextInput
             value={input}
@@ -210,10 +221,11 @@ function MessageBubble({
 
   if (isUser) {
     return (
-      <Animated.View entering={entering} className="items-end" style={{ opacity: pendingSend ? 0.7 : 1 }}>
+      <Animated.View entering={entering} className="items-end">
         <View
           style={{
             maxWidth: '86%',
+            opacity: pendingSend ? 0.7 : 1,
             backgroundColor: colors.accent.default,
             paddingHorizontal: 16,
             paddingVertical: 11,

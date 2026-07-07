@@ -37,7 +37,8 @@
           "photosPermission": "Vector accesează pozele pentru a scana bonuri.",
           "cameraPermission": "Vector folosește camera pentru a fotografia și scana bonuri."
         }
-      ]
+      ],
+      "./plugins/with-disable-script-sandboxing"
     ],
     "experiments": {
       "typedRoutes": true,

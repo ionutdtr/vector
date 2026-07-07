@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -215,7 +215,10 @@ export function HomeScreen() {
             </View>
           </View>
         </View>
-        <View className="mt-3 border-t border-hairline pt-3">
+        <View
+          className="mt-3 pt-3"
+          style={{ borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.hairline }}
+        >
           <Text variant="small" tone="muted">
             {`Cost extragere ≈ ${formatAmount(extractionCost(business))} ${base} · 16% dividende + CASS`}
           </Text>
