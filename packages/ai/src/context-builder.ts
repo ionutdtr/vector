@@ -10,7 +10,7 @@ import {
   profiles,
   recurring,
 } from '@vector/db';
-import type { Domain, FinancialState } from '@vector/shared';
+import { type Domain, type FinancialState, netIfExtracted } from '@vector/shared';
 import { and, desc, eq, gte } from 'drizzle-orm';
 
 const num = (v: string | null | undefined): number => (v ? Number(v) : 0);
@@ -106,6 +106,14 @@ export async function buildFinancialState(
     const match = prevSnapshots.find((s) => s.capturedOn <= iso);
     return match ? num(match.totalBase) : total;
   };
+  const personalSnapOn = (daysAgo: number): number => {
+    if (!prevSnapshots.length) return personal;
+    const target = new Date();
+    target.setDate(target.getDate() - daysAgo);
+    const iso = target.toISOString().slice(0, 10);
+    const match = prevSnapshots.find((s) => s.capturedOn <= iso);
+    return match ? num(match.personalBase) : personal;
+  };
 
   // Liquidity floor: emergency-fund target if set, else 0.
   const emergency = goals.find((g) => g.kind === 'emergency_fund');
@@ -160,9 +168,11 @@ export async function buildFinancialState(
       total: round(total),
       personal: round(personal),
       business: round(business),
+      business_net_if_extracted: round(netIfExtracted(business)),
       delta_1d: round(total - snapOn(1)),
       delta_7d: round(total - snapOn(7)),
       delta_30d: round(total - snapOn(30)),
+      personal_delta_7d: round(personal - personalSnapOn(7)),
     },
     liquidity: {
       total: round(liquid),

@@ -9,6 +9,7 @@ import { briefingRoute } from './briefing';
 import { disciplineRoute } from './discipline';
 import { eventsRoute } from './events';
 import { goalsRoute } from './goals';
+import { importRoute } from './import';
 import { insightsRoute } from './insights';
 import { ipsRoute } from './ips';
 import { networthRoute } from './networth';
@@ -48,6 +49,7 @@ protectedRoutes.route('/accounts', accountsRoute);
 protectedRoutes.route('/events', eventsRoute);
 protectedRoutes.route('/recurring', recurringRoute);
 protectedRoutes.route('/networth', networthRoute);
+protectedRoutes.route('/import', importRoute);
 
 // Phase 2 — the conscience + goals
 protectedRoutes.route('/ips', ipsRoute);

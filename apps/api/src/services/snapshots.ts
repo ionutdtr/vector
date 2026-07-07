@@ -144,13 +144,16 @@ export interface NetWorthTrend {
   d1: number | null;
   d7: number | null;
   d30: number | null;
-  series: Array<{ date: string; total: number }>;
+  /** Personal-only deltas — the user's real, spendable position. */
+  personal: { d1: number | null; d7: number | null; d30: number | null };
+  series: Array<{ date: string; total: number; personal: number }>;
 }
 
-/** Deltas vs 1/7/30 days ago + a 30-point series, from the snapshot history. */
+/** Deltas vs 1/7/30 days ago + a 30-point series (total + personal), from snapshots. */
 export async function netWorthTrend(
   userId: string,
   currentTotal: number,
+  currentPersonal: number,
 ): Promise<NetWorthTrend> {
   const snaps = await db
     .select()
@@ -160,18 +163,32 @@ export async function netWorthTrend(
     .limit(90);
 
   const today = new Date();
-  const delta = (daysAgo: number): number | null => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - daysAgo);
-    const D = dayIso(d);
-    const found = snaps.find((s) => s.capturedOn <= D); // nearest on/before
-    return found ? round(currentTotal - num(found.totalBase)) : null;
-  };
+  const deltaOf =
+    (current: number, field: (s: (typeof snaps)[number]) => number) =>
+    (daysAgo: number): number | null => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - daysAgo);
+      const D = dayIso(d);
+      const found = snaps.find((s) => s.capturedOn <= D); // nearest on/before
+      return found ? round(current - field(found)) : null;
+    };
+  const totalDelta = deltaOf(currentTotal, (s) => num(s.totalBase));
+  const personalDelta = deltaOf(currentPersonal, (s) => num(s.personalBase));
 
   const series = [...snaps]
     .sort((a, b) => (a.capturedOn < b.capturedOn ? -1 : 1))
     .slice(-30)
-    .map((s) => ({ date: s.capturedOn, total: num(s.totalBase) }));
+    .map((s) => ({
+      date: s.capturedOn,
+      total: num(s.totalBase),
+      personal: num(s.personalBase),
+    }));
 
-  return { d1: delta(1), d7: delta(7), d30: delta(30), series };
+  return {
+    d1: totalDelta(1),
+    d7: totalDelta(7),
+    d30: totalDelta(30),
+    personal: { d1: personalDelta(1), d7: personalDelta(7), d30: personalDelta(30) },
+    series,
+  };
 }

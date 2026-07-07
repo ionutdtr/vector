@@ -25,6 +25,6 @@ networthRoute.get('/', async (c) => {
     .limit(5);
   if (existing.length < 5) await backfillSnapshots(userId);
 
-  const trend = await netWorthTrend(userId, nw.total);
+  const trend = await netWorthTrend(userId, nw.total, nw.personal);
   return c.json({ ...nw, trend });
 });

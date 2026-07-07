@@ -13,9 +13,13 @@ export interface FinancialState {
     total: number;
     personal: number;
     business: number;
+    /** Business capital after dividend tax + CASS — what it's actually worth to the user. */
+    business_net_if_extracted: number;
     delta_1d: number;
     delta_7d: number;
     delta_30d: number;
+    /** Personal-only 7-day delta (the user's real, spendable position). */
+    personal_delta_7d: number;
   };
   liquidity: { total: number; floor: number; status: 'above' | 'at' | 'below' };
   accounts: Array<{
