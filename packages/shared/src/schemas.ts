@@ -5,12 +5,24 @@ import {
   DOMAINS,
   EVENT_TYPES,
   GOAL_KINDS,
+  IPS_KINDS,
 } from './constants';
 
 /** Amounts cross the wire as positive numbers; the DB stores numeric strings. */
 const money = z.number().finite().nonnegative();
 const currency = z.enum(CURRENCIES);
 const isoDateTime = z.string().datetime({ offset: true });
+
+/**
+ * A normalized email — lowercased + trimmed so lookups are canonical. Without
+ * this, autofill/paste of a mixed-case address creates duplicate accounts and
+ * makes password reset silently fail (the DB email column is case-sensitive).
+ */
+const emailField = z
+  .string()
+  .email()
+  .max(200)
+  .transform((s) => s.trim().toLowerCase());
 
 export const accountInputSchema = z.object({
   domain: z.enum(DOMAINS),
@@ -105,3 +117,59 @@ export const onboardingSchema = z.object({
   goals: z.array(goalInputSchema).default([]),
 });
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
+
+/** Public sign-up. baseCurrency/timezone are optional so a user isn't locked to RON. */
+export const registerSchema = z.object({
+  email: emailField,
+  password: z.string().min(8).max(128),
+  firstName: z.string().min(1).max(60),
+  baseCurrency: currency.default('RON'),
+  timezone: z.string().max(64).default('Europe/Bucharest'),
+});
+export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const loginSchema = z.object({
+  email: emailField,
+  password: z.string().min(1).max(128),
+});
+export type LoginInput = z.infer<typeof loginSchema>;
+
+const code6 = z.string().regex(/^\d{6}$/, 'A 6-digit code is required');
+
+/** Verify the signed-in user's email with the code they received. */
+export const verifyEmailSchema = z.object({ code: code6 });
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+/** Request a password-reset code. Always answered generically (no enumeration). */
+export const forgotPasswordSchema = z.object({
+  email: emailField,
+});
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  email: emailField,
+  code: code6,
+  password: z.string().min(8).max(128),
+});
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+/** Editable profile fields (PATCH /me). */
+export const profileUpdateSchema = z.object({
+  firstName: z.string().min(1).max(60).optional(),
+  baseCurrency: currency.optional(),
+  timezone: z.string().max(64).optional(),
+});
+export type ProfileUpdate = z.infer<typeof profileUpdateSchema>;
+
+/** Create a custom IPS rule (POST /ips). */
+export const ipsRuleInputSchema = z.object({
+  code: z
+    .string()
+    .min(1)
+    .max(60)
+    .regex(/^[a-z0-9_]+$/, 'lowercase letters, digits and underscores only'),
+  statement: z.string().min(1).max(240),
+  kind: z.enum(IPS_KINDS),
+  params: z.record(z.string(), z.unknown()).optional(),
+});
+export type IpsRuleInput = z.infer<typeof ipsRuleInputSchema>;

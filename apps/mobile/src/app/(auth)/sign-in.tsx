@@ -9,7 +9,7 @@ export default function SignIn() {
   const router = useRouter();
   const signIn = useAuth((s) => s.signIn);
 
-  const [email, setEmail] = useState('office@divex.ro');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -62,6 +62,26 @@ export default function SignIn() {
             </Text>
           ) : null}
           <Button label="Intră" loading={loading} onPress={onSubmit} />
+
+          <Text
+            variant="caption"
+            tone="accent"
+            style={{ textAlign: 'center' }}
+            onPress={() => router.push('/(auth)/forgot-password')}
+          >
+            Ai uitat parola?
+          </Text>
+
+          <Text variant="caption" tone="secondary" style={{ textAlign: 'center' }}>
+            Nu ai cont?{' '}
+            <Text
+              variant="caption"
+              tone="accent"
+              onPress={() => router.push('/(auth)/sign-up')}
+            >
+              Creează cont
+            </Text>
+          </Text>
         </View>
       </View>
     </Screen>

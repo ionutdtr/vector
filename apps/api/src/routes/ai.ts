@@ -6,7 +6,7 @@ import {
   hasAiKey,
   scanReceipt,
 } from '@vector/ai';
-import { aiMessages, aiThreads, db, insights } from '@vector/db';
+import { aiMessages, aiThreads, db, insights, profiles } from '@vector/db';
 import { type EventInput, simulateInputSchema } from '@vector/shared';
 import { and, asc, desc, eq, gte } from 'drizzle-orm';
 import { Hono } from 'hono';
@@ -101,7 +101,16 @@ aiRoute.post('/chat', async (c) => {
   if (!message?.trim()) return c.json({ error: 'message required' }, 400);
 
   let tid = threadId;
-  if (!tid) {
+  if (tid) {
+    // A client-supplied threadId MUST belong to the caller — otherwise a user
+    // could read and pollute another user's advisor conversation.
+    const [owned] = await db
+      .select({ id: aiThreads.id })
+      .from(aiThreads)
+      .where(and(eq(aiThreads.id, tid), eq(aiThreads.userId, userId)))
+      .limit(1);
+    if (!owned) return c.json({ error: 'Not found' }, 404);
+  } else {
     const [t] = await db
       .insert(aiThreads)
       .values({ userId, kind: 'advisor', title: message.slice(0, 40) })
@@ -127,16 +136,19 @@ aiRoute.post('/chat', async (c) => {
   let reply: string;
   let logged = false;
   if (turn.kind === 'log') {
+    // Log in the user's base currency, not a hardcoded RON (a EUR/USD user's
+    // amounts would otherwise be stored — and fx-converted — as the wrong currency).
+    const currency = state.base_currency as EventInput['currency'];
     const { event, insights: evInsights } = await createEvent(userId, {
       domain: turn.event.domain as 'personal' | 'business',
       type: turn.event.type as EventInput['type'],
       title: turn.event.title,
       amount: turn.event.amount,
-      currency: 'RON',
+      currency,
       occurredAt: new Date().toISOString(),
     });
     logged = true;
-    reply = `Am notat: **${event.title}** — ${turn.event.amount} RON (${TYPE_RO[turn.event.type] ?? turn.event.type}).`;
+    reply = `Am notat: **${event.title}** — ${turn.event.amount} ${currency} (${TYPE_RO[turn.event.type] ?? turn.event.type}).`;
     const warn = evInsights.find((i) => i.kind === 'warning');
     if (warn) reply += `\n\n${warn.body}`;
   } else {
@@ -190,6 +202,7 @@ const MAX_IMAGE_B64 = 7_000_000;
  */
 aiRoute.post('/scan-receipt', async (c) => {
   if (!hasAiKey()) return c.json(AI_UNAVAILABLE, 503);
+  const userId = c.get('userId');
 
   const body = (await c.req.json().catch(() => ({}))) as {
     image?: string;
@@ -205,8 +218,17 @@ aiRoute.post('/scan-receipt', async (c) => {
     return c.json({ error: 'image too large' }, 413);
   }
 
+  const [profile] = await db
+    .select({ baseCurrency: profiles.baseCurrency })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+
   try {
-    const scan = await scanReceipt({ data: image, mediaType });
+    const scan = await scanReceipt(
+      { data: image, mediaType },
+      profile?.baseCurrency ?? 'RON',
+    );
     return c.json({ scan });
   } catch {
     return c.json({ error: 'scan failed' }, 502);

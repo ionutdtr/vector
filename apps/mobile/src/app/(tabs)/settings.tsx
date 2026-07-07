@@ -103,7 +103,7 @@ export default function SettingsScreen() {
             <View>
               <Text variant="body">Reguli IPS</Text>
               <Text variant="small" tone="muted">
-                Cele 11 principii care te protejează de tine
+                Principiile care te protejează de tine
               </Text>
             </View>
             <Text variant="title" tone="muted">

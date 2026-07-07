@@ -15,6 +15,13 @@
       "when": 1783345389631,
       "tag": "0001_large_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783425939220,
+      "tag": "0002_bright_maverick",
+      "breakpoints": true
     }
   ]
 }

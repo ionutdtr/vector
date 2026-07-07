@@ -15,9 +15,9 @@ health.get('/', async (c) => {
       time: new Date().toISOString(),
     });
   } catch (err) {
-    return c.json(
-      { status: 'degraded', db: 'down', error: String(err) },
-      503,
-    );
+    // Log the detail server-side; never leak raw driver/connection errors to the
+    // public, unauthenticated health endpoint.
+    console.error('[health] db check failed:', err);
+    return c.json({ status: 'degraded', db: 'down' }, 503);
   }
 });

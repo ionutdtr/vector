@@ -44,7 +44,7 @@ export function simulatePrompt(
     decision,
     null,
     2,
-  )}\n\nSimulate its impact on liquidity (vs the floor), net worth, the apartment goal's date, and the investment trajectory. Give a verdict (yes / no / wait / conditional) with the reason and any IPS rule touched. If you would advise against it, offer one concrete alternative.`;
+  )}\n\nSimulate its impact on liquidity (vs the floor), net worth, the invested trajectory, and — only if the decision touches one — the target date of the user's most-affected goal that has a target date (read the goals from FinancialState.goals; never assume a specific goal like an apartment exists). Give a verdict (yes / no / wait / conditional) with the reason and any IPS rule touched. If you would advise against it, offer one concrete alternative.`;
 }
 
 export function insightPrompt(
@@ -63,14 +63,16 @@ export function insightPrompt(
  * aggregates-first, so no line-per-product. The persona prefix still applies;
  * this only frames the extraction.
  */
-export const RECEIPT_SCAN_PROMPT = `The image is meant to be a purchase receipt (bon fiscal). Extract, for the user to confirm:
+export function receiptScanPrompt(baseCurrency = 'RON'): string {
+  return `The image is meant to be a purchase receipt (bon fiscal). Extract, for the user to confirm:
 - merchant: the store / merchant name as printed (short).
 - total: the GRAND TOTAL actually paid — the final total line, never a subtotal and never a single product's price.
-- currency: RON, EUR, or USD (Romanian receipts are in lei / RON).
+- currency: the currency of the total (RON, EUR, or USD). Read it from the printed symbol/text; when no currency is printed, default to the user's base currency (${baseCurrency}).
 - date: the purchase date as YYYY-MM-DD if it is printed; omit it otherwise.
 - type: "smoking" if this is a purchase of cigarettes / tobacco, otherwise "expense".
 - confidence: how sure you are of the total and merchant.
 Never invent numbers. If the total is not clearly legible, keep confidence low. If the image is not a legible receipt at all, set is_receipt to false.`;
+}
 
 export function reviewPrompt(
   state: FinancialState,

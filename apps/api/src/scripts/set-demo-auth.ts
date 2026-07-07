@@ -12,7 +12,12 @@ async function main() {
   const passwordHash = await hashPassword(PASSWORD);
   const [row] = await db
     .update(profiles)
-    .set({ email: EMAIL, passwordHash, onboardedAt: new Date() })
+    .set({
+      email: EMAIL,
+      passwordHash,
+      onboardedAt: new Date(),
+      emailVerifiedAt: new Date(),
+    })
     .where(eq(profiles.id, DEMO_ID))
     .returning();
   if (!row) throw new Error('Demo profile not found');

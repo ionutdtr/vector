@@ -1,3 +1,4 @@
+import { useAuth } from '../auth/store';
 import { getToken } from '../auth/token';
 
 /**
@@ -20,6 +21,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...(init?.headers ?? {}),
     },
   });
+  // An authenticated request that comes back 401 means the token expired or was
+  // revoked — sign out so the root layout routes back to the auth screen, instead
+  // of every screen showing a raw "API 401" error. (Login/register failures carry
+  // no token, so they aren't caught here.)
+  if (res.status === 401 && token) {
+    void useAuth.getState().signOut();
+  }
   if (!res.ok) {
     throw new Error(`API ${res.status}: ${await res.text()}`);
   }

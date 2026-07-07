@@ -17,6 +17,7 @@ import {
   accountTypeEnum,
   aiRoleEnum,
   aiThreadKindEnum,
+  authTokenKindEnum,
   domainEnum,
   eventSourceEnum,
   eventTypeEnum,
@@ -41,9 +42,30 @@ export const profiles = pgTable('profiles', {
   firstName: text().notNull(),
   baseCurrency: text().notNull().default('RON'),
   timezone: text().notNull().default('Europe/Bucharest'),
+  emailVerifiedAt: timestamp({ withTimezone: true }),
   onboardedAt: timestamp({ withTimezone: true }),
   createdAt,
 });
+
+// ── auth_tokens (email verification + password reset codes) ─────────────────
+// Short numeric codes emailed to the user. Only a hash of the code is stored, so
+// a DB leak can't be replayed. `attempts` + short `expiresAt` bound guessing.
+export const authTokens = pgTable(
+  'auth_tokens',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    kind: authTokenKindEnum().notNull(),
+    codeHash: text().notNull(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    consumedAt: timestamp({ withTimezone: true }),
+    attempts: integer().notNull().default(0),
+    createdAt,
+  },
+  (t) => [index('auth_tokens_user_kind_idx').on(t.userId, t.kind)],
+);
 
 // ── accounts ──────────────────────────────────────────────────────────────��─
 export const accounts = pgTable(

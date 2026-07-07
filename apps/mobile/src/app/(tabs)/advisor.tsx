@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -8,15 +9,19 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat, useSendMessage } from '@shared/api/ai';
+import { useMe } from '@shared/api/me';
 import { colors } from '@shared/theme/colors';
 import { Button, Card, Markdown, Text } from '@shared/ui';
 
 export default function AdvisorScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { data, isError } = useChat();
+  const { data: me } = useMe();
   const send = useSendMessage();
   const [input, setInput] = useState('');
 
+  const needsVerify = me?.emailVerified === false;
   const messages = data?.messages ?? [];
 
   const onSend = () => {
@@ -31,6 +36,20 @@ export default function AdvisorScreen() {
       <View className="px-5 pb-2">
         <Text variant="h1">Advisor</Text>
       </View>
+
+      {needsVerify ? (
+        <View className="px-5 pb-2">
+          <Card tone="accent" onPress={() => router.push('/verify-email')}>
+            <Text variant="small" tone="accent">
+              VERIFICĂ EMAILUL
+            </Text>
+            <Text variant="body" tone="secondary" style={{ marginTop: 4 }}>
+              Advisorul se deblochează după ce îți verifici emailul. Atinge ca să
+              introduci codul.
+            </Text>
+          </Card>
+        </View>
+      ) : null}
 
       <ScrollView
         className="flex-1 px-5"
