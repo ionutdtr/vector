@@ -7,11 +7,22 @@ import {
   Inter_800ExtraBold,
   useFonts,
 } from '@expo-google-fonts/inter';
+import {
+  SpaceGrotesk_400Regular,
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+} from '@expo-google-fonts/space-grotesk';
+import {
+  SplineSansMono_400Regular,
+  SplineSansMono_500Medium,
+  SplineSansMono_600SemiBold,
+} from '@expo-google-fonts/spline-sans-mono';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useAuth } from '@shared/auth/store';
+import { usePrefs } from '@shared/settings/store';
 import { Providers } from '@shared/providers';
 import { colors } from '@shared/theme/colors';
 
@@ -24,16 +35,24 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
     Inter_800ExtraBold,
+    SpaceGrotesk_400Regular,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SplineSansMono_400Regular,
+    SplineSansMono_500Medium,
+    SplineSansMono_600SemiBold,
   });
 
   const status = useAuth((s) => s.status);
   const hydrate = useAuth((s) => s.hydrate);
+  const hydratePrefs = usePrefs((s) => s.hydrate);
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     hydrate();
-  }, [hydrate]);
+    hydratePrefs();
+  }, [hydrate, hydratePrefs]);
 
   useEffect(() => {
     if (!loaded || status === 'loading') return;
@@ -57,6 +76,8 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
+          headerBackButtonDisplayMode: 'minimal',
+          headerBackTitle: '',
           contentStyle: { backgroundColor: colors.bg.base },
         }}
       >
@@ -91,6 +112,10 @@ export default function RootLayout() {
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
         />
         <Stack.Screen
+          name="import"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
           name="ips"
           options={{
             headerShown: true,
@@ -98,7 +123,7 @@ export default function RootLayout() {
             headerStyle: { backgroundColor: colors.bg.base },
             headerTintColor: colors.accent.default,
             headerTitleStyle: {
-              fontFamily: 'Inter_600SemiBold',
+              fontFamily: 'SpaceGrotesk_600SemiBold',
               color: colors.content.primary,
             },
           }}
@@ -111,7 +136,20 @@ export default function RootLayout() {
             headerStyle: { backgroundColor: colors.bg.base },
             headerTintColor: colors.accent.default,
             headerTitleStyle: {
-              fontFamily: 'Inter_600SemiBold',
+              fontFamily: 'SpaceGrotesk_600SemiBold',
+              color: colors.content.primary,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="goals"
+          options={{
+            headerShown: true,
+            title: 'Obiective',
+            headerStyle: { backgroundColor: colors.bg.base },
+            headerTintColor: colors.accent.default,
+            headerTitleStyle: {
+              fontFamily: 'SpaceGrotesk_600SemiBold',
               color: colors.content.primary,
             },
           }}
@@ -124,7 +162,7 @@ export default function RootLayout() {
             headerStyle: { backgroundColor: colors.bg.base },
             headerTintColor: colors.accent.default,
             headerTitleStyle: {
-              fontFamily: 'Inter_600SemiBold',
+              fontFamily: 'SpaceGrotesk_600SemiBold',
               color: colors.content.primary,
             },
           }}
@@ -137,7 +175,7 @@ export default function RootLayout() {
             headerStyle: { backgroundColor: colors.bg.base },
             headerTintColor: colors.accent.default,
             headerTitleStyle: {
-              fontFamily: 'Inter_600SemiBold',
+              fontFamily: 'SpaceGrotesk_600SemiBold',
               color: colors.content.primary,
             },
           }}

@@ -1,5 +1,7 @@
 import { View } from 'react-native';
 import { formatSignedAmount } from '../lib/format';
+import { colors } from '../theme/colors';
+import { numericStyle } from '../theme/typography';
 import { Text } from './text';
 
 interface DeltaProps {
@@ -9,23 +11,36 @@ interface DeltaProps {
   decimals?: number;
 }
 
-/** A change chip: ▲/▼ + signed value, colored by direction. */
+/**
+ * The change chip — the ONE surface that carries the up/down semantic pair.
+ * A filled wash pill (never a solid fill), caret + signed value in the numeric
+ * voice, coloured only on the number itself.
+ */
 export function Delta({ value, currency, percent, decimals = 0 }: DeltaProps) {
   const up = value >= 0;
-  const tone = up ? 'success' : 'danger';
+  const color = up ? colors.success : colors.danger;
+  const bg = up ? colors.successWash : colors.dangerWash;
+
   const suffix = [
     currency ? ` ${currency}` : '',
-    percent != null ? ` (${up ? '+' : '−'}${Math.abs(percent)}%)` : '',
+    percent != null ? `  ·  ${up ? '+' : '−'}${Math.abs(percent)}%` : '',
   ].join('');
 
   return (
     <View
-      className={`flex-row items-center gap-1 self-start rounded-pill px-2.5 py-1 ${up ? 'bg-success/15' : 'bg-danger/15'}`}
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        gap: 4,
+        backgroundColor: bg,
+        borderRadius: 999,
+        paddingHorizontal: 9,
+        paddingVertical: 3,
+      }}
     >
-      <Text variant="small" tone={tone}>
-        {up ? '▲' : '▼'}
-      </Text>
-      <Text variant="small" tone={tone} tabular>
+      <Text style={{ color, fontSize: 10, lineHeight: 12 }}>{up ? '▲' : '▼'}</Text>
+      <Text style={[numericStyle('small'), { color }]}>
         {`${formatSignedAmount(value, { decimals, forceSign: true })}${suffix}`}
       </Text>
     </View>

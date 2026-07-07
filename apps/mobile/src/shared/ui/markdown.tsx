@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import type { TypeVariant } from '../theme/typography';
+import { humanizeRule, isRuleCode } from '../lib/rules';
 import { Text, type Tone } from './text';
 
 /**
@@ -9,6 +10,33 @@ import { Text, type Tone } from './text';
  * showing the raw syntax. Deliberately small — no tables, links, or images.
  */
 const INLINE_RE = /(\*\*[^*]+?\*\*|`[^`]+?`)/g;
+
+/** Strip inline/block markdown to plain text (for the collapsed insight lede). */
+export function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+?)\*\*/g, '$1')
+    .replace(/`([^`]+?)`/g, (_, c: string) => (isRuleCode(c) ? humanizeRule(c) : c))
+    .replace(/^\s*#{1,6}\s+/gm, '')
+    .replace(/^\s*[-*•]\s+/gm, '')
+    .trim();
+}
+
+/** The first paragraph, flattened to a single line — the 2-line preview source. */
+export function previewText(text: string): string {
+  const firstPara = text.split(/\n\s*\n/)[0] ?? text;
+  return stripMarkdown(firstPara).replace(/\s*\n\s*/g, ' ').trim();
+}
+
+/**
+ * Structural test for "is there more to show" — decided at render time (never
+ * via onTextLayout) so the memo never flashes a truncated frame. True when the
+ * body has multiple paragraphs, any list/heading, or a long opening paragraph.
+ */
+export function hasRichBody(text: string): boolean {
+  if (/\n\s*\n/.test(text)) return true;
+  if (/^\s*(?:[-*•]|#{1,6})\s+/m.test(text)) return true;
+  return previewText(text).length > 120;
+}
 
 function inlineNodes(text: string, tone: Tone): ReactNode[] {
   const out: ReactNode[] = [];
@@ -25,9 +53,10 @@ function inlineNodes(text: string, tone: Tone): ReactNode[] {
         </Text>,
       );
     } else {
+      const code = tok.slice(1, -1);
       out.push(
         <Text key={key++} tone="accent" style={{ fontFamily: 'Inter_500Medium' }}>
-          {tok.slice(1, -1)}
+          {isRuleCode(code) ? humanizeRule(code) : code}
         </Text>,
       );
     }

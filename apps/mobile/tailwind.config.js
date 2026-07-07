@@ -7,10 +7,10 @@ module.exports = {
     extend: {
       colors: {
         bg: {
-          base: '#0A0A1B',
-          surface: '#14142C',
-          surface2: '#1C1C3B',
-          hero: '#16163A',
+          base: '#0B0A14',
+          surface: '#17151F',
+          surface2: '#201D2B',
+          hero: '#262238',
         },
         content: {
           primary: '#FFFFFF',
@@ -24,18 +24,30 @@ module.exports = {
           pressed: '#2F49D6',
           wash: 'rgba(59,91,253,0.14)',
         },
-        success: '#22C55E',
+        signal: {
+          DEFAULT: '#E5A94E',
+          hover: '#F2BD68',
+          wash: 'rgba(229,169,78,0.14)',
+        },
+        success: {
+          DEFAULT: '#5FA98C',
+          wash: 'rgba(95,169,140,0.14)',
+        },
+        danger: {
+          DEFAULT: '#C56B4E',
+          wash: 'rgba(197,107,78,0.14)',
+        },
         warning: '#F59E0B',
-        danger: '#EF4444',
         info: '#38BDF8',
+        violet: '#A78BFA',
         hairline: 'rgba(255,255,255,0.07)',
         stroke: 'rgba(255,255,255,0.12)',
       },
       borderRadius: {
-        sm: '12px',
-        md: '18px',
-        lg: '28px',
-        card: '32px',
+        sm: '10px',
+        md: '16px',
+        lg: '22px',
+        card: '24px',
         pill: '999px',
       },
     },

@@ -10,8 +10,6 @@ export default function GoalsScreen() {
 
   return (
     <Screen>
-      <Text variant="h1">Obiective</Text>
-
       {isLoading ? (
         <Text variant="body" tone="muted">
           se încarcă…

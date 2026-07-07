@@ -1,13 +1,18 @@
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { Switch, View } from 'react-native';
 import { useAccounts } from '@shared/api/accounts';
 import { useAuth } from '@shared/auth/store';
+import { impactLight } from '@shared/lib/haptics';
+import { usePrefs } from '@shared/settings/store';
+import { colors } from '@shared/theme/colors';
 import { Button, Card, Money, Screen, SectionTitle, Text } from '@shared/ui';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { data: accounts, isLoading, isError } = useAccounts();
   const signOut = useAuth((s) => s.signOut);
+  const haptics = usePrefs((s) => s.haptics);
+  const setHaptics = usePrefs((s) => s.setHaptics);
 
   return (
     <Screen>
@@ -80,6 +85,23 @@ export default function SettingsScreen() {
       </View>
 
       <View className="gap-3">
+        <SectionTitle>Planificare</SectionTitle>
+        <Card onPress={() => router.push('/goals')}>
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text variant="body">Obiective</Text>
+              <Text variant="small" tone="muted">
+                Apartament, fond de urgență, investiții
+              </Text>
+            </View>
+            <Text variant="title" tone="muted">
+              ›
+            </Text>
+          </View>
+        </Card>
+      </View>
+
+      <View className="gap-3">
         <SectionTitle>Fluxuri</SectionTitle>
         <Card onPress={() => router.push('/recurring')}>
           <View className="flex-row items-center justify-between">
@@ -87,6 +109,23 @@ export default function SettingsScreen() {
               <Text variant="body">Plăți recurente</Text>
               <Text variant="small" tone="muted">
                 Chirie, leasing, abonamente, salariu
+              </Text>
+            </View>
+            <Text variant="title" tone="muted">
+              ›
+            </Text>
+          </View>
+        </Card>
+      </View>
+
+      <View className="gap-3">
+        <SectionTitle>Date</SectionTitle>
+        <Card onPress={() => router.push('/import')}>
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text variant="body">Import Revolut</Text>
+              <Text variant="small" tone="muted">
+                Extras CSV → tranzacții + sold sincronizat
               </Text>
             </View>
             <Text variant="title" tone="muted">
@@ -109,6 +148,29 @@ export default function SettingsScreen() {
             <Text variant="title" tone="muted">
               ›
             </Text>
+          </View>
+        </Card>
+      </View>
+
+      <View className="gap-3">
+        <SectionTitle>Preferințe</SectionTitle>
+        <Card>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 pr-3">
+              <Text variant="body">Haptics</Text>
+              <Text variant="small" tone="muted" style={{ marginTop: 2 }}>
+                Vibrații subtile la atingeri și confirmări
+              </Text>
+            </View>
+            <Switch
+              value={haptics}
+              onValueChange={(v) => {
+                setHaptics(v);
+                if (v) impactLight();
+              }}
+              trackColor={{ true: colors.accent.default, false: colors.bg.surface2 }}
+              thumbColor="#FFFFFF"
+            />
           </View>
         </Card>
       </View>

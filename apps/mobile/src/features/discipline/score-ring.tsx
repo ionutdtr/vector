@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { colors } from '@shared/theme/colors';
+import { nums } from '@shared/theme/typography';
 import { Text } from '@shared/ui';
 
 export function bandColor(score: number): string {
@@ -68,9 +69,8 @@ export function ScoreRing({
         />
       </Svg>
       <Text
-        tabular
         style={{
-          fontFamily: 'Inter_800ExtraBold',
+          fontFamily: nums.hero,
           fontSize: numSize,
           lineHeight: numSize + 2,
           letterSpacing: -1,

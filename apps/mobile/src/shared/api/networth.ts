@@ -16,7 +16,8 @@ export interface NetWorthTrend {
   d1: number | null;
   d7: number | null;
   d30: number | null;
-  series: Array<{ date: string; total: number }>;
+  personal: { d1: number | null; d7: number | null; d30: number | null };
+  series: Array<{ date: string; total: number; personal: number }>;
 }
 
 export interface NetWorth {
