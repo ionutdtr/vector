@@ -3,6 +3,7 @@ import { recurringInputSchema } from '@vector/shared';
 import { and, asc, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
+import { OwnershipError, assertAccountsOwned } from '../services/ownership';
 
 export const recurringRoute = new Hono<AppEnv>();
 
@@ -23,6 +24,14 @@ recurringRoute.post('/', async (c) => {
     return c.json({ error: 'Invalid input', issues: parsed.error.issues }, 400);
   }
   const d = parsed.data;
+  try {
+    await assertAccountsOwned(userId, [d.accountId]);
+  } catch (err) {
+    if (err instanceof OwnershipError) {
+      return c.json({ error: 'cont inexistent' }, 404);
+    }
+    throw err;
+  }
   const [row] = await db
     .insert(recurring)
     .values({

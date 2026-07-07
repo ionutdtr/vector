@@ -3,17 +3,23 @@ import { accounts, db, events, fxRates, insights, profiles } from '@vector/db';
 import { EVENT_SIGN, type EventInput } from '@vector/shared';
 import { and, eq } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import { assertAccountsOwned, assertGoalsOwned } from './ownership';
 import { type CreatedInsight, evaluateEventRules } from './rules-engine';
 
-/** Adjust an account balance by `delta` (in the account's own currency). */
+/**
+ * Adjust an account balance by `delta` (in the account's own currency).
+ * Scoped by `userId` so this primitive can NEVER touch another tenant's row,
+ * even if a caller passes a foreign account id.
+ */
 export async function adjustBalance(
+  userId: string,
   accountId: string,
   delta: number,
 ): Promise<void> {
   await db
     .update(accounts)
     .set({ currentBalance: sql`${accounts.currentBalance} + ${delta}` })
-    .where(eq(accounts.id, accountId));
+    .where(and(eq(accounts.id, accountId), eq(accounts.userId, userId)));
 }
 
 /**
@@ -47,6 +53,12 @@ export async function createEvent(
   userId: string,
   d: EventInput,
 ): Promise<CreateEventResult> {
+  // Broken-object-level-authorization guard: the referenced account(s)/goal must
+  // belong to this user. Without this, a caller could attach an event to — and
+  // (via adjustBalance) mutate — another tenant's account. Throws OwnershipError.
+  await assertAccountsOwned(userId, [d.accountId, d.counterAccountId]);
+  await assertGoalsOwned(userId, [d.goalId]);
+
   const [profile] = await db
     .select()
     .from(profiles)
@@ -89,12 +101,12 @@ export async function createEvent(
 
   // Reflect the flow in account balances (assumes event currency == account currency).
   if (d.type === 'transfer' && d.accountId && d.counterAccountId) {
-    await adjustBalance(d.accountId, -d.amount);
-    await adjustBalance(d.counterAccountId, d.amount);
+    await adjustBalance(userId, d.accountId, -d.amount);
+    await adjustBalance(userId, d.counterAccountId, d.amount);
   } else {
     const sign = EVENT_SIGN[d.type];
     if (sign !== 0 && d.accountId) {
-      await adjustBalance(d.accountId, sign * d.amount);
+      await adjustBalance(userId, d.accountId, sign * d.amount);
     }
   }
 
@@ -107,8 +119,14 @@ export async function createEvent(
   });
 
   // Best-effort AI interpretation for significant events. Never blocks the log.
+  // Gated on a verified email so an unverified account can't drive paid AI calls
+  // through the events path (mirrors the /ai + /reviews route gates).
   const aiInsights: CreatedInsight[] = [];
-  if (hasAiKey() && worthAnInsight(row!.type, Number(row!.baseAmount))) {
+  if (
+    profile?.emailVerifiedAt &&
+    hasAiKey() &&
+    worthAnInsight(row!.type, Number(row!.baseAmount))
+  ) {
     try {
       const state = await buildFinancialState(db, userId);
       const ai = await generateInsight(state, {

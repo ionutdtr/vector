@@ -48,7 +48,9 @@ export const aiSimulationSchema = z.object({
       breaches: z.boolean(),
     }),
     net_worth: z.object({ delta: z.number() }),
-    apartment: z.object({ date_shift_days: z.number() }),
+    goal_shift: z
+      .object({ name: z.string(), date_shift_days: z.number() })
+      .optional(),
     investments: z.object({ delta_trajectory: z.number() }),
   }),
   rules_touched: stringArray,

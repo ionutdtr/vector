@@ -71,3 +71,8 @@ export const ipsKindEnum = pgEnum('ips_kind', ['hard_limit', 'principle']);
 export const aiThreadKindEnum = pgEnum('ai_thread_kind', ['advisor', 'simulator']);
 
 export const aiRoleEnum = pgEnum('ai_role', ['user', 'assistant']);
+
+export const authTokenKindEnum = pgEnum('auth_token_kind', [
+  'email_verify',
+  'password_reset',
+]);

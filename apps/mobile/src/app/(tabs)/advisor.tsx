@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -20,10 +21,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type ChatMessage, useChat, useSendMessage } from '@shared/api/ai';
+import { useMe } from '@shared/api/me';
 import { selectionTick } from '@shared/lib/haptics';
 import { colors } from '@shared/theme/colors';
 import { radius } from '@shared/theme/radius';
-import { Button, Markdown, Text } from '@shared/ui';
+import { Button, Card, Markdown, Text } from '@shared/ui';
 
 /** Quick openers — a mix of the three questions the CFO answers + natural-language logging. */
 const SUGGESTIONS = [
@@ -36,13 +38,16 @@ const SUGGESTIONS = [
 
 export default function AdvisorScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { data, isError } = useChat();
+  const { data: me } = useMe();
   const send = useSendMessage();
   const [input, setInput] = useState('');
   // The just-sent message, shown optimistically until the thread refetches.
   const [pending, setPending] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
+  const needsVerify = me?.emailVerified === false;
   const messages = data?.messages ?? [];
   const isEmpty = messages.length === 0 && !pending;
   // Glass tab bar is an absolute overlay (height 62 + safe area in the tabs
@@ -65,6 +70,20 @@ export default function AdvisorScreen() {
   return (
     <View className="flex-1 bg-bg-base" style={{ paddingTop: insets.top }}>
       <AdvisorHeader />
+
+      {needsVerify ? (
+        <View className="px-5 pb-2">
+          <Card tone="accent" onPress={() => router.push('/verify-email')}>
+            <Text variant="small" tone="accent">
+              VERIFICĂ EMAILUL
+            </Text>
+            <Text variant="body" tone="secondary" style={{ marginTop: 4 }}>
+              Advisorul se deblochează după ce îți verifici emailul. Atinge ca să
+              introduci codul.
+            </Text>
+          </Card>
+        </View>
+      ) : null}
 
       <ScrollView
         ref={scrollRef}

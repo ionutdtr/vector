@@ -73,7 +73,7 @@ export interface Simulation {
   impact: {
     liquidity: { before: number; after: number; floor: number; breaches: boolean };
     net_worth: { delta: number };
-    apartment: { date_shift_days: number };
+    goal_shift?: { name: string; date_shift_days: number };
     investments: { delta_trajectory: number };
   };
   rules_touched: string[];

@@ -2,7 +2,8 @@ import type { IpsKind } from './constants';
 
 /**
  * The Investment Policy Statement — the app's conscience.
- * Seeded per-user at onboarding (rules are userId-scoped in the DB), then editable.
+ * Rules are userId-scoped in the DB and editable. New users are seeded with the
+ * universal core (IPS_CORE) at registration; situational rules are opt-in.
  * The AI receives the active rules verbatim and cites them by `code`.
  */
 export interface IpsRuleTemplate {
@@ -13,7 +14,12 @@ export interface IpsRuleTemplate {
   sortOrder: number;
 }
 
-export const IPS_TEMPLATE: IpsRuleTemplate[] = [
+/**
+ * The universal core — rules that apply to essentially any person's finances.
+ * These are seeded for every new user at registration (see provisionUser).
+ * `impulse_cap` ships with a sensible default the user can edit.
+ */
+export const IPS_CORE: IpsRuleTemplate[] = [
   {
     code: 'objective_freedom',
     statement: 'The objective is long-term freedom, not maximum money.',
@@ -34,45 +40,53 @@ export const IPS_TEMPLATE: IpsRuleTemplate[] = [
     sortOrder: 2,
   },
   {
-    code: 'business_future_value',
-    statement: 'Business cash exists to create future value.',
-    kind: 'principle',
-    sortOrder: 3,
-  },
-  {
     code: 'capital_has_a_job',
     statement: 'Capital should always have a job.',
     kind: 'principle',
-    sortOrder: 4,
+    sortOrder: 3,
   },
   {
     code: 'avoid_lifestyle_inflation',
     statement: 'Avoid lifestyle inflation.',
     kind: 'principle',
-    sortOrder: 5,
+    sortOrder: 4,
   },
   {
     code: 'invest_consistently',
     statement: 'Invest consistently.',
     kind: 'principle',
-    sortOrder: 6,
-  },
-  {
-    code: 'business_before_luxury',
-    statement: 'Business growth has priority over luxury purchases.',
-    kind: 'principle',
-    sortOrder: 7,
-  },
-  {
-    code: 'apartment_keeps_liquidity',
-    statement: 'Buying the apartment must not destroy liquidity.',
-    kind: 'principle',
-    sortOrder: 8,
+    sortOrder: 5,
   },
   {
     code: 'finance_vs_returns',
     statement:
       'If financing is cheaper than expected investment returns, prefer financing.',
+    kind: 'principle',
+    sortOrder: 6,
+  },
+];
+
+/**
+ * Situational rules — they assume a particular life shape (a business, an
+ * apartment plan, being a smoker). NOT seeded by default; offered opt-in during
+ * onboarding / via POST /ips so a user's IPS matches their actual situation.
+ */
+export const IPS_SITUATIONAL: IpsRuleTemplate[] = [
+  {
+    code: 'business_future_value',
+    statement: 'Business cash exists to create future value.',
+    kind: 'principle',
+    sortOrder: 7,
+  },
+  {
+    code: 'business_before_luxury',
+    statement: 'Business growth has priority over luxury purchases.',
+    kind: 'principle',
+    sortOrder: 8,
+  },
+  {
+    code: 'apartment_keeps_liquidity',
+    statement: 'Buying the apartment must not destroy liquidity.',
     kind: 'principle',
     sortOrder: 9,
   },
@@ -83,3 +97,6 @@ export const IPS_TEMPLATE: IpsRuleTemplate[] = [
     sortOrder: 10,
   },
 ];
+
+/** The full template (core + situational) — the owner's own complete IPS. */
+export const IPS_TEMPLATE: IpsRuleTemplate[] = [...IPS_CORE, ...IPS_SITUATIONAL];

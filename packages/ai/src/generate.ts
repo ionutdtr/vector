@@ -17,7 +17,7 @@ import {
   CFO_SYSTEM_PROMPT,
   insightPrompt,
   recommendPrompt,
-  RECEIPT_SCAN_PROMPT,
+  receiptScanPrompt,
   reviewPrompt,
   simulatePrompt,
 } from './prompts';
@@ -102,15 +102,21 @@ const SIMULATION_TOOL_SCHEMA = {
           },
           required: ['delta'],
         },
-        apartment: {
+        goal_shift: {
           type: 'object',
+          description:
+            "Impact on the user's most-affected goal that has a target date, taken from FinancialState.goals. OMIT this field entirely if the user has no dated goal this decision affects.",
           properties: {
+            name: {
+              type: 'string',
+              description: "The goal's name, exactly as it appears in FinancialState.goals.",
+            },
             date_shift_days: {
               type: 'number',
-              description: 'Days the apartment goal moves later (+) or earlier (−). 0 if untouched.',
+              description: 'Days that goal moves later (+) or earlier (−).',
             },
           },
-          required: ['date_shift_days'],
+          required: ['name', 'date_shift_days'],
         },
         investments: {
           type: 'object',
@@ -123,7 +129,7 @@ const SIMULATION_TOOL_SCHEMA = {
           required: ['delta_trajectory'],
         },
       },
-      required: ['liquidity', 'net_worth', 'apartment', 'investments'],
+      required: ['liquidity', 'net_worth', 'investments'],
     },
     rules_touched: {
       type: 'array',
@@ -337,10 +343,24 @@ const RECEIPT_TOOL_SCHEMA = {
  * so a receipt is one expense, not a line per product. Detects a tobacco purchase
  * as `smoking` so it feeds the quit-smoking goal and the discipline score.
  */
-export async function scanReceipt(image: {
-  data: string;
-  mediaType: string;
-}): Promise<AiReceiptScan> {
+export async function scanReceipt(
+  image: {
+    data: string;
+    mediaType: string;
+  },
+  baseCurrency = 'RON',
+): Promise<AiReceiptScan> {
+  // Bias the currency default toward the user's base currency instead of RON.
+  const inputSchema = {
+    ...RECEIPT_TOOL_SCHEMA,
+    properties: {
+      ...RECEIPT_TOOL_SCHEMA.properties,
+      currency: {
+        ...RECEIPT_TOOL_SCHEMA.properties.currency,
+        description: `Currency of the total. Read the printed symbol/text; default to the user's base currency (${baseCurrency}) when none is printed.`,
+      },
+    },
+  };
   const raw = await generateStructuredContent({
     model: MODELS.scan,
     system: CFO_SYSTEM_PROMPT,
@@ -353,15 +373,20 @@ export async function scanReceipt(image: {
           data: image.data,
         },
       },
-      { type: 'text', text: RECEIPT_SCAN_PROMPT },
+      { type: 'text', text: receiptScanPrompt(baseCurrency) },
     ],
     toolName: 'record_receipt',
     toolDescription:
       'Return the single grand total and merchant read from this receipt, for the user to confirm.',
-    inputSchema: RECEIPT_TOOL_SCHEMA as unknown as Record<string, unknown>,
+    inputSchema: inputSchema as unknown as Record<string, unknown>,
     maxTokens: 512,
   });
-  return aiReceiptScanSchema.parse(raw);
+  const scan = aiReceiptScanSchema.parse(raw);
+  // If the model omitted the currency, fall back to the user's base — not RON.
+  if (!(raw as { currency?: unknown }).currency) {
+    scan.currency = baseCurrency;
+  }
+  return scan;
 }
 
 const LOG_EVENT_TOOL = {
@@ -383,7 +408,11 @@ const LOG_EVENT_TOOL = {
         ],
       },
       title: { type: 'string', description: 'Short label, e.g. "Benzină".' },
-      amount: { type: 'number', description: 'Positive amount, in RON.' },
+      amount: {
+        type: 'number',
+        description:
+          "Positive amount, in the user's base currency (see base_currency in the FinancialState context).",
+      },
       domain: { type: 'string', enum: ['personal', 'business'] },
     },
     required: ['type', 'title', 'amount', 'domain'],

@@ -1,5 +1,6 @@
 import { db, ipsRules } from '@vector/db';
-import { and, eq } from 'drizzle-orm';
+import { ipsRuleInputSchema } from '@vector/shared';
+import { and, eq, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
 
@@ -13,6 +14,36 @@ ipsRoute.get('/', async (c) => {
     .where(eq(ipsRules.userId, userId))
     .orderBy(ipsRules.sortOrder);
   return c.json({ rules: rows });
+});
+
+/** Add a custom rule to the user's IPS (codes are unique per user). */
+ipsRoute.post('/', async (c) => {
+  const userId = c.get('userId');
+  const parsed = ipsRuleInputSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ error: 'Date invalide', issues: parsed.error.issues }, 400);
+  }
+  const d = parsed.data;
+
+  const [{ maxOrder } = { maxOrder: null }] = await db
+    .select({ maxOrder: sql<number>`max(${ipsRules.sortOrder})` })
+    .from(ipsRules)
+    .where(eq(ipsRules.userId, userId));
+
+  const [row] = await db
+    .insert(ipsRules)
+    .values({
+      userId,
+      code: d.code,
+      statement: d.statement,
+      kind: d.kind,
+      params: d.params,
+      sortOrder: (maxOrder ?? -1) + 1,
+    })
+    .onConflictDoNothing()
+    .returning();
+  if (!row) return c.json({ error: 'Cod deja folosit' }, 409);
+  return c.json({ rule: row }, 201);
 });
 
 ipsRoute.patch('/:id', async (c) => {
@@ -37,4 +68,13 @@ ipsRoute.patch('/:id', async (c) => {
     .returning();
   if (!row) return c.json({ error: 'Not found' }, 404);
   return c.json({ rule: row });
+});
+
+ipsRoute.delete('/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  await db
+    .delete(ipsRules)
+    .where(and(eq(ipsRules.id, id), eq(ipsRules.userId, userId)));
+  return c.json({ ok: true });
 });

@@ -73,7 +73,9 @@ export interface AiSimulation {
   impact: {
     liquidity: { before: number; after: number; floor: number; breaches: boolean };
     net_worth: { delta: number };
-    apartment: { date_shift_days: number };
+    /** Impact on the user's most-affected dated goal, if any (generalized from the
+     *  owner-specific "apartment"). Omitted when no dated goal is touched. */
+    goal_shift?: { name: string; date_shift_days: number };
     investments: { delta_trajectory: number };
   };
   rules_touched: string[];

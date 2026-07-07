@@ -10,10 +10,9 @@ const VERDICT: Record<Verdict, { label: string; tone: Tone }> = {
   conditional: { label: 'CONDIȚIONAT', tone: 'accent' },
 };
 
-function apartmentLabel(days: number): { text: string; tone: Tone } {
+function goalShiftLabel(days: number): { text: string; tone: Tone } {
   if (days === 0) return { text: 'fără impact', tone: 'muted' };
-  if (days > 0)
-    return { text: `+${days} zile mai târziu`, tone: 'danger' };
+  if (days > 0) return { text: `+${days} zile mai târziu`, tone: 'danger' };
   return { text: `${Math.abs(days)} zile mai devreme`, tone: 'success' };
 }
 
@@ -46,7 +45,8 @@ export function SimulationResult({
   currency?: string;
 }) {
   const v = VERDICT[sim.verdict];
-  const apt = apartmentLabel(sim.impact.apartment.date_shift_days);
+  const goalShift = sim.impact.goal_shift;
+  const gs = goalShift ? goalShiftLabel(goalShift.date_shift_days) : null;
 
   return (
     <View className="gap-4">
@@ -79,7 +79,7 @@ export function SimulationResult({
             forceSign
           />
         </Row>
-        <Row label="Traiectorie investiții">
+        <Row label="Traiectorie investiții" border={!!gs}>
           <Money
             value={sim.impact.investments.delta_trajectory}
             currency={currency}
@@ -88,11 +88,13 @@ export function SimulationResult({
             forceSign
           />
         </Row>
-        <Row label="Apartament" border={false}>
-          <Text variant="title" tone={apt.tone}>
-            {apt.text}
-          </Text>
-        </Row>
+        {gs && goalShift ? (
+          <Row label={goalShift.name} border={false}>
+            <Text variant="title" tone={gs.tone}>
+              {gs.text}
+            </Text>
+          </Row>
+        ) : null}
       </Card>
 
       {/* IPS rules touched */}
