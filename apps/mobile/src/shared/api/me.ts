@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 
 export interface Me {
@@ -17,5 +17,14 @@ export function useMe() {
     queryKey: ['me'],
     queryFn: () => api.get<{ user: Me }>('/me').then((r) => r.user),
     staleTime: 1000 * 60,
+  });
+}
+
+/** Mark onboarding complete → server stamps onboardedAt; refetch the profile. */
+export function useCompleteOnboarding() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post<{ user: Me }>('/onboarded', {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['me'] }),
   });
 }

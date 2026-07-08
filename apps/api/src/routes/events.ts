@@ -19,6 +19,19 @@ eventsRoute.get('/', async (c) => {
   return c.json({ events: rows });
 });
 
+/** A single event, user-scoped — powers the Timeline → event detail drill-down. */
+eventsRoute.get('/:id', async (c) => {
+  const userId = c.get('userId');
+  const id = c.req.param('id');
+  const [row] = await db
+    .select()
+    .from(events)
+    .where(and(eq(events.id, id), eq(events.userId, userId)))
+    .limit(1);
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  return c.json({ event: row });
+});
+
 eventsRoute.post('/', async (c) => {
   const userId = c.get('userId');
   const parsed = eventInputSchema.safeParse(await c.req.json());

@@ -83,6 +83,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
         <Stack.Screen
           name="event/new"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
@@ -90,6 +91,19 @@ export default function RootLayout() {
         <Stack.Screen
           name="event/scan"
           options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="event/[id]"
+          options={{
+            headerShown: true,
+            title: 'Eveniment',
+            headerStyle: { backgroundColor: colors.bg.base },
+            headerTintColor: colors.accent.default,
+            headerTitleStyle: {
+              fontFamily: 'SpaceGrotesk_600SemiBold',
+              color: colors.content.primary,
+            },
+          }}
         />
         <Stack.Screen
           name="account/new"

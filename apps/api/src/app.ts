@@ -21,13 +21,16 @@ const corsOrigins = process.env.CORS_ORIGINS?.split(',')
 app.use('*', cors(corsOrigins?.length ? { origin: corsOrigins } : {}));
 
 // Body-size caps: only the receipt scan carries a (base64) image; everything else
-// is small. Reject oversized bodies before they are parsed into memory.
+// is small. Reject oversized bodies before they are parsed into memory. The scan
+// cap sits just under Vercel's ~4.5 MB serverless request-body ceiling, so an
+// oversized upload gets our clean 413 ("image too large") from the handler rather
+// than the platform's opaque rejection before the function ever runs.
 const SCAN_PATH = '/ai/scan-receipt';
 app.use('*', async (c, next) => {
   if (c.req.path === SCAN_PATH) return next();
   return bodyLimit({ maxSize: 512 * 1024 })(c, next);
 });
-app.use(SCAN_PATH, bodyLimit({ maxSize: 12 * 1024 * 1024 }));
+app.use(SCAN_PATH, bodyLimit({ maxSize: 4 * 1024 * 1024 }));
 
 // Throttle the sensitive public endpoints. Login is keyed by target email so a
 // rotating source IP can't bypass the cap and honest clients don't collide into

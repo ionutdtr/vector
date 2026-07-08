@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { Sparkles, WifiOff } from 'lucide-react-native';
 import { type ReactNode, useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
@@ -153,6 +154,7 @@ function EmptyState() {
 
 export default function TimelineScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const events = useEvents();
   const insights = useInsights();
   const del = useDeleteEvent();
@@ -272,6 +274,7 @@ export default function TimelineScreen() {
                         <EventRow
                           event={item.event}
                           topDivider={prev?.kind === 'event'}
+                          onPress={() => router.push(`/event/${item.event.id}`)}
                           onLongPress={() => confirmDelete(item.event)}
                         />
                       </Animated.View>

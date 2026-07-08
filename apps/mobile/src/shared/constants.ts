@@ -11,6 +11,24 @@ export const EVENT_TYPE_OPTIONS = [
   { key: 'smoking', label: 'Fumat' },
 ] as const;
 
+/**
+ * Curated spend categories (Romanian). Values match the Revolut importer's
+ * vocabulary where they overlap (Mâncare, Transport, Locuință) so manual and
+ * imported spending merge into the same donut arcs. Diacritics are fine — the
+ * category-colour lookup is diacritic-insensitive.
+ */
+export const EXPENSE_CATEGORY_OPTIONS = [
+  { key: 'Mâncare', label: 'Mâncare' },
+  { key: 'Cumpărături', label: 'Cumpărături' },
+  { key: 'Transport', label: 'Transport' },
+  { key: 'Locuință', label: 'Locuință' },
+  { key: 'Facturi', label: 'Facturi' },
+  { key: 'Sănătate', label: 'Sănătate' },
+  { key: 'Distracție', label: 'Distracție' },
+  { key: 'Abonament', label: 'Abonament' },
+  { key: 'Altele', label: 'Altele' },
+] as const;
+
 export const ACCOUNT_TYPE_OPTIONS = [
   { key: 'bank', label: 'Cont bancar' },
   { key: 'cash', label: 'Cash' },

@@ -28,6 +28,13 @@ const AI_UNAVAILABLE = {
   error: 'AI indisponibil — adaugă ANTHROPIC_API_KEY în apps/api/.env',
 } as const;
 
+// A transient upstream failure (Anthropic 429/5xx, network) — distinct from a
+// missing key. Surface a calm "try again" 503 instead of a generic 500 so the
+// client shows "advisorul e ocupat", not a raw error card.
+const AI_BUSY = {
+  error: 'Advisorul e ocupat un moment. Încearcă din nou imediat.',
+} as const;
+
 /** The daily recommendation. Generated once per day, cached in `insights`. */
 aiRoute.post('/recommend', async (c) => {
   const userId = c.get('userId');
@@ -50,8 +57,14 @@ aiRoute.post('/recommend', async (c) => {
     .limit(1);
   if (cached) return c.json({ recommendation: cached });
 
-  const state = await buildFinancialState(db, userId);
-  const rec = await generateRecommendation(state);
+  let rec;
+  try {
+    const state = await buildFinancialState(db, userId);
+    rec = await generateRecommendation(state);
+  } catch (err) {
+    console.error('[ai] recommend failed:', err);
+    return c.json(AI_BUSY, 503);
+  }
 
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
@@ -127,11 +140,17 @@ aiRoute.post('/chat', async (c) => {
   await db.insert(aiMessages).values({ threadId: tid, role: 'user', content: message });
 
   const state = await buildFinancialState(db, userId);
-  const turn = await generateChatTurn(
-    state,
-    history.map((m) => ({ role: m.role, content: m.content })),
-    message,
-  );
+  let turn;
+  try {
+    turn = await generateChatTurn(
+      state,
+      history.map((m) => ({ role: m.role, content: m.content })),
+      message,
+    );
+  } catch (err) {
+    console.error('[ai] chat failed:', err);
+    return c.json(AI_BUSY, 503);
+  }
 
   let reply: string;
   let logged = false;
@@ -175,13 +194,19 @@ aiRoute.post('/simulate', async (c) => {
   }
 
   const state = await buildFinancialState(db, userId);
-  const simulation = await generateSimulation(state, {
-    title: parsed.data.title,
-    amount: parsed.data.amount,
-    currency: parsed.data.currency,
-    recurring: parsed.data.recurring,
-    domain: parsed.data.domain,
-  });
+  let simulation;
+  try {
+    simulation = await generateSimulation(state, {
+      title: parsed.data.title,
+      amount: parsed.data.amount,
+      currency: parsed.data.currency,
+      recurring: parsed.data.recurring,
+      domain: parsed.data.domain,
+    });
+  } catch (err) {
+    console.error('[ai] simulate failed:', err);
+    return c.json(AI_BUSY, 503);
+  }
 
   return c.json({ simulation });
 });

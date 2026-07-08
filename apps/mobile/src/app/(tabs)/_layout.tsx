@@ -1,5 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { Tabs, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import {
   Activity,
   House,
@@ -16,6 +17,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMe } from '@shared/api/me';
 import { colors, elevation } from '@shared/theme/colors';
 import { impactLight, selectionTick } from '@shared/lib/haptics';
 import { PRESS_SCALE, springPress } from '@shared/theme/motion';
@@ -103,6 +105,14 @@ function GlassBar() {
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { data: me } = useMe();
+
+  // First-run gate: a freshly-registered user (onboardedAt null) is sent to the
+  // onboarding flow before they can use the tabs. Existing users pass through.
+  useEffect(() => {
+    if (me && !me.onboardedAt) router.replace('/onboarding');
+  }, [me, router]);
 
   return (
     <View className="flex-1 bg-bg-base">

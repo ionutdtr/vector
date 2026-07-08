@@ -1,7 +1,18 @@
-import * as LocalAuthentication from 'expo-local-authentication';
 import { create } from 'zustand';
 import { queryClient } from '../query';
 import { clearToken, loadToken, loadUser, saveToken, saveUser } from './token';
+
+// Biometric unlock is an optional capability. On a stale or partial native
+// binary — or a device with no biometric hardware — the module's native side can
+// be absent, and requiring it throws "Cannot find native module" at eval time.
+// Every screen imports this store, so an unguarded import white-screens the whole
+// app. Guard the load: a missing module simply degrades to "no lock".
+let LocalAuthentication: typeof import('expo-local-authentication') | null = null;
+try {
+  LocalAuthentication = require('expo-local-authentication');
+} catch {
+  LocalAuthentication = null;
+}
 
 export interface AuthUser {
   id: string;
@@ -21,6 +32,7 @@ interface AuthState {
 }
 
 async function biometricAvailable(): Promise<boolean> {
+  if (!LocalAuthentication) return false;
   try {
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
     const enrolled = await LocalAuthentication.isEnrolledAsync();
@@ -59,6 +71,11 @@ export const useAuth = create<AuthState>((set) => ({
     set({ status: 'guest', user: null });
   },
   unlock: async () => {
+    if (!LocalAuthentication) {
+      // No biometric module in this binary — nothing to authenticate against.
+      set({ status: 'authed' });
+      return;
+    }
     const res = await LocalAuthentication.authenticateAsync({
       promptMessage: 'Deblochează Vector',
       fallbackLabel: 'Folosește codul',

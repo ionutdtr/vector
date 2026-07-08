@@ -37,6 +37,19 @@ export function useEvents() {
   });
 }
 
+export function useEvent(id: string) {
+  const qc = useQueryClient();
+  return useQuery({
+    queryKey: queryKeys.event(id),
+    queryFn: () =>
+      api.get<{ event: EventRecord }>(`/events/${id}`).then((r) => r.event),
+    // Paint instantly from the already-loaded Timeline list, then refetch the
+    // authoritative row — the detail opens with no spinner on the common path.
+    initialData: () =>
+      qc.getQueryData<EventRecord[]>(queryKeys.events)?.find((e) => e.id === id),
+  });
+}
+
 export function useCreateEvent() {
   const qc = useQueryClient();
   return useMutation({

@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { useAccounts } from '@shared/api/accounts';
 import { useCreateEvent } from '@shared/api/events';
-import { DOMAIN_OPTIONS, EVENT_TYPE_OPTIONS } from '@shared/constants';
+import { DOMAIN_OPTIONS, EVENT_TYPE_OPTIONS, EXPENSE_CATEGORY_OPTIONS } from '@shared/constants';
 import { Button, Field, Screen, Segmented, SelectPills, Text } from '@shared/ui';
 
 type EventTypeKey = (typeof EVENT_TYPE_OPTIONS)[number]['key'];
 type DomainKey = (typeof DOMAIN_OPTIONS)[number]['key'];
+type CategoryKey = (typeof EXPENSE_CATEGORY_OPTIONS)[number]['key'];
 
 export default function NewEventModal() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function NewEventModal() {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState<string | undefined>(undefined);
+  const [category, setCategory] = useState<CategoryKey | undefined>(undefined);
 
   const numeric = Number(amount.replace(',', '.'));
   const canSave = title.trim().length > 0 && numeric > 0 && !createEvent.isPending;
@@ -33,6 +35,7 @@ export default function NewEventModal() {
         currency: 'RON',
         occurredAt: new Date().toISOString(),
         accountId,
+        category: type === 'expense' ? category : undefined,
       },
       { onSuccess: () => router.back() },
     );
@@ -95,6 +98,19 @@ export default function NewEventModal() {
         placeholder="0"
         keyboardType="decimal-pad"
       />
+
+      {type === 'expense' ? (
+        <View className="gap-3">
+          <Text variant="caption" tone="secondary">
+            Categorie (opțional)
+          </Text>
+          <SelectPills
+            options={[...EXPENSE_CATEGORY_OPTIONS]}
+            value={category}
+            onChange={setCategory}
+          />
+        </View>
+      ) : null}
 
       {accountOptions.length > 0 ? (
         <View className="gap-3">

@@ -171,6 +171,28 @@ protectedRoutes.patch('/me', async (c) => {
   });
 });
 
+/** Mark first-run onboarding complete. Idempotent — stamps onboardedAt. */
+protectedRoutes.post('/onboarded', async (c) => {
+  const userId = c.get('userId');
+  const [row] = await db
+    .update(profiles)
+    .set({ onboardedAt: new Date() })
+    .where(eq(profiles.id, userId))
+    .returning();
+  if (!row) return c.json({ error: 'Not found' }, 404);
+  return c.json({
+    user: {
+      id: row.id,
+      email: row.email,
+      firstName: row.firstName,
+      baseCurrency: row.baseCurrency,
+      timezone: row.timezone,
+      emailVerified: !!row.emailVerifiedAt,
+      onboardedAt: row.onboardedAt,
+    },
+  });
+});
+
 // Phase 1 — the spine
 protectedRoutes.route('/briefing', briefingRoute);
 protectedRoutes.route('/accounts', accountsRoute);

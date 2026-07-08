@@ -97,7 +97,7 @@ const CATEGORY_KEYWORDS: Record<string, string> = {
   facturi: '#D6A15E', utilitati: '#D6A15E', abonament: '#A78BFA', subscriptie: '#A78BFA',
   distractie: '#C89ADF', iesiri: '#C89ADF', shopping: '#C89ADF',
   sanatate: '#7FBEC8', medical: '#7FBEC8',
-  casa: '#B0A88F', chirie: '#B0A88F', mobila: '#B0A88F',
+  casa: '#B0A88F', chirie: '#B0A88F', mobila: '#B0A88F', locuinta: '#B0A88F',
 };
 const CATEGORY_PALETTE = [
   '#E8917B', '#8FB99A', '#8AA0E0', '#5FA98C', '#D6A15E', '#C89ADF', '#7FBEC8', '#B0A88F', '#9AA0B8',
@@ -105,7 +105,13 @@ const CATEGORY_PALETTE = [
 
 export function categoryColor(category?: string | null): string {
   if (!category) return '#9AA0B8';
-  const key = category.trim().toLowerCase();
+  // Diacritic-insensitive so "Mâncare"/"Sănătate"/"Locuință" (and the Revolut
+  // importer's own labels) match the keyword table, not just their ASCII forms.
+  const key = category
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
   for (const k in CATEGORY_KEYWORDS) {
     if (key.includes(k)) return CATEGORY_KEYWORDS[k]!;
   }

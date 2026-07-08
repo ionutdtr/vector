@@ -39,6 +39,14 @@ reviewsRoute.post('/', async (c) => {
   const parsed = periodSchema.safeParse(body.period);
   if (!parsed.success) return c.json({ error: 'invalid period' }, 400);
 
-  const review = await generateAndStoreReview(userId, parsed.data);
-  return c.json({ review });
+  try {
+    const review = await generateAndStoreReview(userId, parsed.data);
+    return c.json({ review });
+  } catch (err) {
+    console.error('[reviews] generation failed:', err);
+    return c.json(
+      { error: 'Nu am putut genera board meeting-ul acum. Încearcă din nou.' },
+      503,
+    );
+  }
 });
